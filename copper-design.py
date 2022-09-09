@@ -42,6 +42,8 @@ cont = np.genfromtxt("nozzleContour.csv",delimiter=",")
 def radiusCurvature(x1,y1,x2,y2,x3,y3):
     num = np.sqrt(((x2-x1)**2+(y2-y1)**2)*((x2-x3)**2+(y2-y3)**2)*((x3-x1)**2+(y3-y1)**2))
     den = 2*(x1*y2+x2*y3+x3*y1-x1*y3-x2*y1-x3*y2)
+    if den==0:
+        return 0
     return num/den
 
 xVals = cont[0,::]
@@ -67,16 +69,16 @@ t = tChamber
 gamma = 1
 pcrit = 0.855 * E * np.sqrt(gamma) / ( (1-mu**2)**(3./4.) * (r/t)**(5./2.) * (l/r))
 if pcrit>pin:
-    print "Buckling pressure okay:",pcrit/1e5,"bar"
+    print("Buckling pressure okay:",pcrit/1e5,"bar")
 else:
-    print "Buckling pressure exceeded:",pcrit/1e5,"bar"
+    print("Buckling pressure exceeded:",pcrit/1e5,"bar")
     
 # Check for hoop stress (due to chamber pressure)    
 s_h = pin*r/t
 if s_h<s_yield:
-    print "Hoop stress okay",s_h/1e6,"MPa"
+    print("Hoop stress okay",s_h/1e6,"MPa")
 else:
-    print "Hoop stress exceeded",s_h/1e6,"MPa"
+    print("Hoop stress exceeded",s_h/1e6,"MPa")
 
 # Read CEA file to find adiabatic wall temperature and convective coefficient
 CEAfile = "dataCea/methalox.out"
@@ -138,7 +140,7 @@ for i in range(1,len(xVals)):
     else:
         channelWidth = Rnozzle*2*np.pi/NChannels - tRib
         if channelWidth<0:
-            print "Error: channel width smaller than 0"
+            print("Error: channel width smaller than 0")
         A = NChannels*channelWidth*channelHeight
         Dh = th.Dh_rect(channelWidth,channelHeight)
 
@@ -281,12 +283,12 @@ for i in range(1,len(xVals)):
     cpvals.append(cp)
     
 # Print output for user
-print min(wvals)*1e3, "mm minimum channel width"
-print max(Twvals), "K maximum wall temperature"
-print (p0vals[0]-p0vals[-1])/1e5,"bar pressure loss"
-print T-Tvals[0], "K temperature rise"
-print Q, "Total heat input"
-print mTot, "kg chamber mass"
+print(min(wvals)*1e3, "mm minimum channel width")
+print(max(Twvals), "K maximum wall temperature")
+print((p0vals[0]-p0vals[-1])/1e5,"bar pressure loss")
+print(T-Tvals[0], "K temperature rise")
+print(Q, "Total heat input")
+print(mTot, "kg chamber mass")
 # Plot results
 
 
@@ -297,7 +299,7 @@ fig.set_size_inches(15/2.54,6/2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
-lins = range(4)
+lins = list(range(4))
 
 # Wall temperature
 lins[0] = ax.plot(xVals[1:]*100, Twvals[::-1], 'g--', lw=2, label = r'$T_w$')
