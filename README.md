@@ -24,7 +24,7 @@ There are two additional directories:
     Contains data for Hyprob engine, digitised from papers by Pizzarelli et al.
 
 
-** Setting up System for running OMECA **
+**Setting up System for running OMECA**
 Running Debian 10.10.
 
 
@@ -37,7 +37,7 @@ Ran commands below to install python3 packages.
 
 
 
-** Running an Analysis**
+**Running an Analysis**
 
 Before we can run an analysis, we need to perform some initial steps:-
 - Defining the rocket nozzle profile
