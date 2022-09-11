@@ -24,6 +24,12 @@ There are two additional directories:
     Contains data for Hyprob engine, digitised from papers by Pizzarelli et al.
 
 
+
+
+
+
+
+
 **Setting up System for running OMECA**
 Running Debian 10.10.
 
@@ -34,6 +40,9 @@ Ran commands below to install python3 packages.
   apt install python3-scipy
   apt install python3-scipy
   apt install python3-matplotlib
+
+
+
 
 
 
