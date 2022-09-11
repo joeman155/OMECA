@@ -1,5 +1,6 @@
 ONE-DIMENSIONAL METHANE ENGINE COOLING ANALYSIS (OMECA)
 -------------------------------------------------------
+**Overview**
 
 This is the repository of the OMECA program. It contains the following files:
 - CEA.py 
@@ -22,4 +23,31 @@ There are two additional directories:
 - dataCira
     Contains data for Hyprob engine, digitised from papers by Pizzarelli et al.
 
+
+** Setting up System for running OMECA **
+Running Debian 10.10.
+
+
+Ran commands below to install python3 packages.
+
+  apt install python3-numpy
+  apt install python3-scipy
+  apt install python3-scipy
+  apt install python3-matplotlib
+
+
+
+** Running an Analysis**
+
+Before we can run an analysis, we need to perform some initial steps:-
+- Defining the rocket nozzle profile
+- Selecting the propellant and propellant properties
+
+We describe this in detail below.
+
+
+Finally, we run the command below to kick off the analysis.
+
+
+python3 copper-design.py
 
