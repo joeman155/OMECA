@@ -23,3 +23,13 @@ There are two additional directories:
     Contains data for Hyprob engine, digitised from papers by Pizzarelli et al.
 
 
+
+
+
+Cea File Details
+----------------
+These are created by visiting webpage: -
+
+https://cearun.grc.nasa.gov/
+
+
