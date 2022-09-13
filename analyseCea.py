@@ -1,7 +1,8 @@
 import CEA
 
 # Read CEA file to find adiabatic wall temperature and convective coefficient
-CEAfile = "dataCea/methalox.out"
+# CEAfile = "dataCea/methalox.out"
+CEAfile = "dataCea/rp-1lox.out"
 AreaCEA,pCEA,TCEA,rhoCEA,MCEA,muCEA,cpCEA,PrCEA,gCEA,pH2O,pCO2,cstar = CEA.read(CEAfile)
 
 
