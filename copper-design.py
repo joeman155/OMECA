@@ -18,7 +18,7 @@ OFratio = 2.00
 fFlow   = 1/(1+OFratio)*mflow
 
 # Define nozzle material and thickness
-tChamber   = 1.2e-3 # wall thickness
+tChamber   = 3.0e-3 # wall thickness
 kChamber   = 295 # W/(m2 K)
 rhoChamber = 9134
 mu         = 0.34 # Poisson's ratio
@@ -29,13 +29,14 @@ s_yield    = 120932000 # Yield strength
 # Not sure where this is defined...throat? Exit? Combustion chamber?
 # I am sure this geometry changes.
 
-NChannels     = 40    # Number of channels
-tRib          = 1e-3  # Thickness of Rib    
-channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm
+
+NChannels     = 30    # Number of channels
+tRib          = 1.5e-3  # Thickness of Rib    
+channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm  # THIS SETTING IS NOT USED IN THIS CODE. IT IS OVERWRITTEN
 roughness     = 6e-6  # Not sure what this is, but assume it is right.
 
 # Initialize coolant pressure and temperature
-p = pin = 90e5      # Pressure in Pascals
+p = pin = 60e5      # Pressure in Pascals
 T = Tin = 298       # Temperature of coolant at nozzle exit in Kelvin
 
 # Read nozzle coordinates
@@ -62,8 +63,9 @@ def interpol(x,y,xNew,how="linear"):
     return f(xNew)
 
 # I BELIEVE this is channel dimensions.
+# It only allows for varying heights, not varying widths. I think we should allow for varying widths.
 xHeight = np.array([0,  9,  11, 13, 15, 16, 18, 20, 30])*1e-2
-Height = np.array([ 0.8,0.8,0.6,1.0,3.0,1.0,0.4,1.1,2])*1e-3
+Height = np.array([ 1.5,1.5,2.0,2.3,3.0,4.0,3,2.5,1.5])*1e-3
 
 # Check for inward buckling (due to coolant pressure)
 l = max(xVals)
@@ -73,16 +75,16 @@ t = tChamber
 gamma = 1
 pcrit = 0.855 * E * np.sqrt(gamma) / ( (1-mu**2)**(3./4.) * (r/t)**(5./2.) * (l/r))
 if pcrit>pin:
-    print("Buckling pressure okay:",pcrit/1e5,"bar")
+    print("Buckling pressure okay: Pin(", round(pin/1e5), ") is less than critical pressure: ",round(pcrit/1e5),"bar")
 else:
-    print("Buckling pressure exceeded:",pcrit/1e5,"bar")
+    print("**DANGER**: Buckling pressure exceeded. Pin(", round(pin/1e5), ") excceds ",round(pcrit/1e5),"bar")
     
 # Check for hoop stress (due to chamber pressure)    
 s_h = pin*r/t
 if s_h<s_yield:
-    print("Hoop stress okay",s_h/1e6,"MPa")
+    print("Hoop stress okay. Max Stress experienced (", round(s_h/1e6), ") is less than yield stress: ",round(s_yield/1e6),"MPa")
 else:
-    print("Hoop stress exceeded",s_h/1e6,"MPa")
+    print("**DANGER**: Hoop stress exceeded. Max Stress experienced: ",round(s_h/1e6), " exceeds yield stress: ", round(s_yield/1e6),"MPa")
 
 # Read CEA file to find adiabatic wall temperature and convective coefficient
 CEAfile = "dataCea/methalox.out"
@@ -155,6 +157,7 @@ for i in range(1,len(xVals)):
     # Calculate density and flow velocity
     rho = methane.eqState(p,T,rho)
     V = fFlow / (A * rho)
+    # print("Flow Velocity at ", xVals[-i], " is ", V)
     
     # Calculate/update static pressure and temperature
     dynPres2 = 0.5*rho*V**2
