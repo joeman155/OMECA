@@ -13,27 +13,30 @@ import scipy.interpolate as intp
 import matplotlib.pyplot as plt
 
 # Calculate fuel flow from engine parameters
-mflow = 3.176 # kg/s
-OFratio = 3.16 
-fFlow = 1/(1+OFratio)*mflow
+mflow   = 0.89229 # kg/s
+OFratio = 2.00 
+fFlow   = 1/(1+OFratio)*mflow
 
 # Define nozzle material and thickness
-tChamber = 4.2e-3 # wall thickness
-kChamber = 295 # W/(m2 K)
+tChamber   = 1.2e-3 # wall thickness
+kChamber   = 295 # W/(m2 K)
 rhoChamber = 9134
-mu = 0.34 # Poisson's ratio
-E = 85e9  # Modulus of elasticity
-s_yield = 120932000 # Yield strength
+mu         = 0.34 # Poisson's ratio
+E          = 85e9  # Modulus of elasticity
+s_yield    = 120932000 # Yield strength
 
 # Define channel geometry
-NChannels = 64
-tRib = 1e-3
-channelHeight = 1e-3
-roughness = 6e-6    
+# Not sure where this is defined...throat? Exit? Combustion chamber?
+# I am sure this geometry changes.
+
+NChannels     = 40    # Number of channels
+tRib          = 1e-3  # Thickness of Rib    
+channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm
+roughness     = 6e-6  # Not sure what this is, but assume it is right.
 
 # Initialize coolant pressure and temperature
-p = pin = 60e5
-T = Tin = 110
+p = pin = 90e5      # Pressure in Pascals
+T = Tin = 298       # Temperature of coolant at nozzle exit in Kelvin
 
 # Read nozzle coordinates
 cont = np.genfromtxt("nozzleContour.csv",delimiter=",")
@@ -49,7 +52,7 @@ def radiusCurvature(x1,y1,x2,y2,x3,y3):
 xVals = cont[0,::]
 yVals = cont[1,::]
 # Define engine size (throat radius and area)
-rt = 0.0216
+rt = 0.01                           # radius of throat of nozzle in meters. Later on, we will calculate this from cont
 At = rt**2*np.pi
 aRatioMinm = min(yVals**2/rt**2)
 
@@ -58,6 +61,7 @@ def interpol(x,y,xNew,how="linear"):
     f = intp.interp1d(x,y,kind=how)
     return f(xNew)
 
+# I BELIEVE this is channel dimensions.
 xHeight = np.array([0,  9,  11, 13, 15, 16, 18, 20, 30])*1e-2
 Height = np.array([ 0.8,0.8,0.6,1.0,3.0,1.0,0.4,1.1,2])*1e-3
 
@@ -285,7 +289,7 @@ for i in range(1,len(xVals)):
 # Print output for user
 print(min(wvals)*1e3, "mm minimum channel width")
 print(max(Twvals), "K maximum wall temperature")
-print((p0vals[0]-p0vals[-1])/1e5,"bar pressure loss")
+print((p0vals[0]-p0vals[-1])/1e5,"bar pressure loss.")
 print(T-Tvals[0], "K temperature rise")
 print(Q, "Total heat input")
 print(mTot, "kg chamber mass")
