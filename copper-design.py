@@ -62,10 +62,12 @@ def interpol(x,y,xNew,how="linear"):
     f = intp.interp1d(x,y,kind=how)
     return f(xNew)
 
-# I BELIEVE this is channel dimensions.
+# CHANNEL HEIGHT DIMENSIONS AT VARIOUS STATIONS
 # It only allows for varying heights, not varying widths. I think we should allow for varying widths.
 xHeight = np.array([0,  9,  11, 13, 15, 16, 18, 20, 30])*1e-2
 Height = np.array([ 1.5,1.5,2.0,2.3,3.0,4.0,3,2.5,1.5])*1e-3
+
+
 
 # Check for inward buckling (due to coolant pressure)
 l = max(xVals)
@@ -79,12 +81,17 @@ if pcrit>pin:
 else:
     print("**DANGER**: Buckling pressure exceeded. Pin(", round(pin/1e5), ") excceds ",round(pcrit/1e5),"bar")
     
+
+
 # Check for hoop stress (due to chamber pressure)    
 s_h = pin*r/t
 if s_h<s_yield:
     print("Hoop stress okay. Max Stress experienced (", round(s_h/1e6), ") is less than yield stress: ",round(s_yield/1e6),"MPa")
 else:
     print("**DANGER**: Hoop stress exceeded. Max Stress experienced: ",round(s_h/1e6), " exceeds yield stress: ", round(s_yield/1e6),"MPa")
+
+
+
 
 # Read CEA file to find adiabatic wall temperature and convective coefficient
 CEAfile = "dataCea/methalox.out"
@@ -150,33 +157,34 @@ for i in range(1,len(xVals)):
         A = NChannels*channelWidth*channelHeight
         Dh = th.Dh_rect(channelWidth,channelHeight)
 
-    # Calculate dynamic pressure and temperature at previous station
+
+    # COOLANT: Calculate dynamic pressure and temperature at previous station
     dynPres1 = 0.5*rho*V**2
     dynTemp1 = 0.5*V**2/cp
 
-    # Calculate density and flow velocity
+    # COOLANT: Calculate density and flow velocity
     rho = methane.eqState(p,T,rho)
     V = fFlow / (A * rho)
     # print("Flow Velocity at ", xVals[-i], " is ", V)
     
-    # Calculate/update static pressure and temperature
+    # COOLANT: Calculate/update static pressure and temperature
     dynPres2 = 0.5*rho*V**2
     p = p - (dynPres2-dynPres1)    
     
     dynTemp2 = 0.5*V**2/cp
     T = T - (dynTemp2 - dynTemp1)
     
-    # Calculate thermodynamic properties of methane at current (rho,T)
+    # COOLANT: Calculate thermodynamic properties of methane at current (rho,T)
     mu = methane.viscosity(rho,T)
     cp = methane.cp(rho,T)
     gam = cp/methane.cv(rho,T)
     kap = methane.conductivity(rho,T)
-    # Calculate bulk flow properties of coolant
 
+    # COOLANT:  Calculate bulk flow properties of coolant
     Re = V*rho*Dh/mu
     Pr = mu*cp/kap
     
-    # Correct for curvature of channel alongside nozzle    
+    # COOLANT RELATED: Correct for curvature of channel alongside nozzle    
     if i>1 and i<len(xVals):
         (x1,y1) = (xVals[-i-1],yVals[-i-1])
         (x2,y2) = (xVals[-i],yVals[-i])
@@ -202,7 +210,7 @@ for i in range(1,len(xVals)):
     elif abs(aRatio-aRatioMinm)<1e-6:
         CEAval_curr = CEAval_curr - 1
     
-    # Calculate hot gas parameters depending on CEA values
+    # HOT GASES: Calculate hot gas parameters depending on CEA values
     pWater = CEA.interpol(aRatio,AreaCEA,CEAval_curr,pH2O)
     pCarbDiox = CEA.interpol(aRatio,AreaCEA,CEAval_curr,pCO2)
     Tg = CEA.interpol(aRatio,AreaCEA,CEAval_curr,TCEA)
@@ -213,7 +221,7 @@ for i in range(1,len(xVals)):
     mug = CEA.interpol(aRatio,AreaCEA,CEAval_curr,muCEA)    
     Taw = th.adiabatic_wall(Tg,gg,Mg,Prg)
     
-    # Increase TwNew to avoid missing loop
+    # HOT GASES: Increase TwNew to avoid missing loop
     TwNew = Tw+10
     TwChannelNew = TwChannel+10
 
@@ -234,38 +242,41 @@ for i in range(1,len(xVals)):
         # Calculate coolant convective coefficient
         hc = Nu*kap/Dh
         
-        # Calculate fin effectiveness        
+        # Incorporate heat transfer fin effectiveness into hc (Heat Transfer coefficient for hot gases)
         m = np.sqrt(2*hc*tRib/kChamber)
         finEffectiveness = np.tanh(m/tRib*channelHeight)/(m/tRib*channelHeight)
         hc = hc*(channelWidth + finEffectiveness*2*channelHeight) / (channelWidth+tRib)
         
-        # Calculate radiative heat transfer
-        qW = 5.74 * (pWater/1e5*Rnozzle)**0.3 * (Taw/100)**3.5
-        qC = 4 * (pCarbDiox/1e5*Rnozzle)**0.3 * (Taw/100)**3.5
+        # Calculate radiative heat transfer (Suspect this is for the MAIN products of combustion)
+        qW = 5.74 * (pWater/1e5*Rnozzle)**0.3 * (Taw/100)**3.5    # Water
+        qC = 4 * (pCarbDiox/1e5*Rnozzle)**0.3 * (Taw/100)**3.5    # Carbon Dioxide
         qRad = qW+qC   
         
         # Calculate heat flux
         q = (Taw-T+qRad/hg) / (1/hg + tChamber/kChamber + 1/hc)
+
+
         # Calculate hot gas wall temperature and channel wall temperature    
         TwNew = Taw-(q-qRad)/hg
         TwChannelNew = T+q/hc
+        # These get fed back into top at beginning of While loop.
         
     Tw = TwNew
     TwChannel = TwChannelNew
     
 
     # Calculate change in temperature and pressure
-    A_heat = 2*np.pi*Rnozzle*l
-    deltaT = q*A_heat/(fFlow*cp)
-    deltap = th.frictionFactor(Dh,roughness,Re) * l/Dh * rho*V**2 / 2.0    
-    Q = Q+q*A_heat   
-    Atot = Atot+A_heat
-    mCur = (2*np.pi*Rnozzle*l*tChamber+l*tRib*channelHeight*NChannels)*rhoChamber
-    mTot = mTot + mCur
+    A_heat = 2*np.pi*Rnozzle*l                                                     # Area of station being considered
+    deltaT = q*A_heat/(fFlow*cp)                                                   # Change in temperature of coolant
+    deltap = th.frictionFactor(Dh,roughness,Re) * l/Dh * rho*V**2 / 2.0            # Change in pressure of coolant
+    Q = Q+q*A_heat                                                                 # Change in enthalpy of coolant
+    Atot = Atot+A_heat                                                             # NOT SURE WHAT THIS IS... 
+    mCur = (2*np.pi*Rnozzle*l*tChamber+l*tRib*channelHeight*NChannels)*rhoChamber  # ?? change in ??
+    mTot = mTot + mCur                                                             # ??
     # Update pressure, temperature and channel length
-    p = p - deltap
-    T = T + deltaT    
-    x = x + l
+    p = p - deltap                                                                 # Update pressure of coolant
+    T = T + deltaT                                                                 # Update temperature of coolant
+    x = x + l                                                                      # new X position.
     
     p0vals.append(p+0.5*rho*V**2)
     T0vals.append(T+0.5*V**2/cp) 
