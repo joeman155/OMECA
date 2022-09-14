@@ -82,6 +82,9 @@ class thermo:
     Kpoli = 6
     Kexpi = 18  
     
+
+
+
     # Define viscosity constants
     d = [0.00260536,-0.0185247,0.0234216,0]
 
@@ -92,6 +95,9 @@ class thermo:
     B = [1.60099e-8,8.50221e-10,0]
     C = [-3.55631e-7,2.80326e-7,0]    
     
+
+
+
     
     # Thermal conductivity constants
     a_t = [-0.5154269e-1,-0.51986885,-0.45638189e-1,0,0.14228623,0,-0.68641484e-1,0.20844530e-1]
@@ -179,7 +185,10 @@ class thermo:
         # Model is based on mol/l density, so pressure must be adjusted by factor 1000
         return (1 + delta * self._darddelta(delta,tau)) * rho/self.M*self.R*T*1000
 
-    # Specific Energy at Constant Pressure for Methane at density/temperature
+    # Specific Energy at Constant Pressure for Methane
+    # Parameters
+    #  - Density
+    #  - Temperature
     def cp(self,rho,T):
         tau = self._tau(T)
         delta = self._delta(rho)        
@@ -187,7 +196,10 @@ class thermo:
         (1 + delta*self._darddelta(delta,tau) - delta*tau*self._dar2ddeltadtau(delta,tau))**2 / \
         (1 + 2*delta*self._darddelta(delta,tau) + delta**2 * self._dar2ddelta2(delta,tau)) )
 
-    # Specific Energy at Constant Volume for Methane at density/temperature
+    # Specific Energy at Constant Volume for Methane 
+    # Parameters
+    #  - Density
+    #  - Temperature
     def cv(self,rho,T):
         tau = self._tau(T)
         delta = self._delta(rho) 
@@ -205,14 +217,14 @@ class thermo:
 #        delta = self._delta(rho) 
 #        return 1000/self.M*self.R*T*(tau*(self._da0dtau(delta,tau) + self._dardtau(delta,tau)))     
 
-    # Derivate of pressure with respect to temperature
+    # Derivative of pressure with respect to temperature
     def _dpdt(self,rho,T):
         tau = self._tau(T)
         delta = self._delta(rho)
         # Pressure must be adjusted by factor 1000
         return 1000*rho/self.M*self.R*(1+delta*self._darddelta(delta,tau) - delta*tau*self._dar2ddeltadtau(delta,tau))
 
-    # Not sure
+    # First derivative of density with respect to Temperature
     def _drhodp(self,rho,T):
         tau = self._tau(T)
         delta = self._delta(rho)
@@ -227,7 +239,14 @@ class thermo:
 #        (tau**2*(self._da02dtau2(delta,tau)+self._dar2dtau2(delta,tau)) ) ))
                     
             
-    # Derive density from temperature.
+    # Derive density of Methane for given pressure/temperature
+    # Parameters
+    #  - Pressure
+    #  - Temperature
+    #
+    # Notes: The derivative of density with respect to pressure depends upon temperature and density. For this reason,
+    #        we need a while loop, to find density that is consistent.
+    #
     def eqState(self,p,T,rhoGuess=500):
         pGuess = self._pressure(rhoGuess,T)
         while abs(pGuess-p)>1:
