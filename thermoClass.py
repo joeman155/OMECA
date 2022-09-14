@@ -121,104 +121,107 @@ class thermo:
     # Equation of state    
     ###
     
-    def rhocrit(self):
+    def _rhocrit(self):
         return self.rho_M_crit*self.M
     
-    def tau(self,T):
+    def _tau(self,T):
         # Tcrit = 190.564000000
         return self.Tcrit/T
         
-    def delta(self,rho):
+    def _delta(self,rho):
         return rho/self.M/self.rho_M_crit
 
-    def ar(self,delta,tau):
+    def _ar(self,delta,tau):
         alpha_r = sum( [ self.noik[i] * delta**self.doik[i] * tau**self.toik[i] for i in range(1,self.Kpoli+1)   ] ) + \
         sum( [ self.noik[i] * delta**self.doik[i] * tau**self.toik[i] * np.exp(-delta**self.coik[i]) for i in range(self.Kpoli+1,self.Kpoli+self.Kexpi+1)   ] )
         return alpha_r
 
-    def a0(self,delta,tau):      
+    def _a0(self,delta,tau):      
         alpha_0 = self.Rstar/self.R * (np.log(delta) + self.noik0[1] + self.noik0[2]*tau + self.noik0[3]*np.log(tau) + 
         sum ( [ self.noik0[i]*np.log(abs(np.sinh(self.thoik[i]*tau))) for i in [4,6] ] ) -
         sum ( [ self.noik0[i]*np.log(abs(np.cosh(self.thoik[i]*tau))) for i in [5,7] ] )
         )
         return alpha_0
         
-    def darddelta(self,delta,tau,ddelta=0.001):
-        return (self.ar(delta+ddelta,tau) - self.ar(delta-ddelta,tau))/(2*ddelta)
+    def _darddelta(self,delta,tau,ddelta=0.001):
+        return (self._ar(delta+ddelta,tau) - self._ar(delta-ddelta,tau))/(2*ddelta)
 
-    def da0dtau(self,delta,tau,dtau=0.001):
-        return (self.a0(delta,tau+dtau) - self.a0(delta,tau-dtau))/(2*dtau)
+    def _da0dtau(self,delta,tau,dtau=0.001):
+        return (self._a0(delta,tau+dtau) - self._a0(delta,tau-dtau))/(2*dtau)
         
-    def dardtau(self,delta,tau,dtau=0.001):
-        return (self.ar(delta,tau+dtau) - self.ar(delta,tau-dtau))/(2*dtau)
+    def _dardtau(self,delta,tau,dtau=0.001):
+        return (self._ar(delta,tau+dtau) - self._ar(delta,tau-dtau))/(2*dtau)
 
     # Second derivatives
-    def dar2dtau2(self,delta,tau,dtau=0.001):
-        return (self.ar(delta,tau+dtau) - 2*self.ar(delta,tau) + self.ar(delta,tau-dtau))/(dtau**2)
+    def _dar2dtau2(self,delta,tau,dtau=0.001):
+        return (self._ar(delta,tau+dtau) - 2*self._ar(delta,tau) + self._ar(delta,tau-dtau))/(dtau**2)
         
-    def da02dtau2(self,delta,tau,dtau=0.001):
-        return (self.a0(delta,tau+dtau) - 2*self.a0(delta,tau) + self.a0(delta,tau-dtau))/(dtau**2)
+    def _da02dtau2(self,delta,tau,dtau=0.001):
+        return (self._a0(delta,tau+dtau) - 2*self._a0(delta,tau) + self._a0(delta,tau-dtau))/(dtau**2)
         
-    def dar2ddelta2(self,delta,tau,ddelta=0.001):
-        return (self.ar(delta+ddelta,tau) - 2*self.ar(delta,tau) + self.ar(delta-ddelta,tau))/(ddelta**2)        
+    def _dar2ddelta2(self,delta,tau,ddelta=0.001):
+        return (self._ar(delta+ddelta,tau) - 2*self._ar(delta,tau) + self._ar(delta-ddelta,tau))/(ddelta**2)        
 
-    def dar2ddeltadtau(self,delta,tau,ddelta=0.001,dtau=0.001):
-        return (self.ar(delta+ddelta,tau+dtau) + self.ar(delta-ddelta,tau-dtau) \
-        - self.ar(delta-ddelta,tau+dtau) - self.ar(delta+ddelta,tau-dtau)   )/(4*ddelta*dtau) 
+    def _dar2ddeltadtau(self,delta,tau,ddelta=0.001,dtau=0.001):
+        return (self._ar(delta+ddelta,tau+dtau) + self._ar(delta-ddelta,tau-dtau) \
+        - self._ar(delta-ddelta,tau+dtau) - self._ar(delta+ddelta,tau-dtau)   )/(4*ddelta*dtau) 
 
-    def pressure(self,rho,T):
-        tau = self.tau(T)
-        delta = self.delta(rho)
+    def _pressure(self,rho,T):
+        tau = self._tau(T)
+        delta = self._delta(rho)
         # Model is based on mol/l density, so pressure must be adjusted by factor 1000
-        return (1 + delta * self.darddelta(delta,tau)) * rho/self.M*self.R*T*1000
+        return (1 + delta * self._darddelta(delta,tau)) * rho/self.M*self.R*T*1000
 
     def cp(self,rho,T):
-        tau = self.tau(T)
-        delta = self.delta(rho)        
-        return 1000/self.M*self.R*(-tau**2*(self.da02dtau2(delta,tau)+self.dar2dtau2(delta,tau)) + \
-        (1 + delta*self.darddelta(delta,tau) - delta*tau*self.dar2ddeltadtau(delta,tau))**2 / \
-        (1 + 2*delta*self.darddelta(delta,tau) + delta**2 * self.dar2ddelta2(delta,tau)) )
+        tau = self._tau(T)
+        delta = self._delta(rho)        
+        return 1000/self.M*self.R*(-tau**2*(self._da02dtau2(delta,tau)+self._dar2dtau2(delta,tau)) + \
+        (1 + delta*self._darddelta(delta,tau) - delta*tau*self._dar2ddeltadtau(delta,tau))**2 / \
+        (1 + 2*delta*self._darddelta(delta,tau) + delta**2 * self._dar2ddelta2(delta,tau)) )
 
     def cv(self,rho,T):
-        tau = self.tau(T)
-        delta = self.delta(rho) 
-        return 1000/self.M*self.R*(-tau**2*(self.da02dtau2(delta,tau)+self.dar2dtau2(delta,tau)))
+        tau = self._tau(T)
+        delta = self._delta(rho) 
+        return 1000/self.M*self.R*(-tau**2*(self._da02dtau2(delta,tau)+self._dar2dtau2(delta,tau)))
 
-    def h(self,rho,T):
-        tau = self.tau(T)
-        delta = self.delta(rho) 
-        return 1000/self.M*self.R*T*(1 + tau*(self.da0dtau(delta,tau) + self.dardtau(delta,tau)) + delta*self.darddelta(delta,tau))        
+# This doesn't seem to be used
+#    def h(self,rho,T):
+#        tau = self._tau(T)
+#        delta = self._delta(rho) 
+#        return 1000/self.M*self.R*T*(1 + tau*(self._da0dtau(delta,tau) + self._dardtau(delta,tau)) + delta*self._darddelta(delta,tau))        
 
-    def u(self,rho,T):
-        tau = self.tau(T)
-        delta = self.delta(rho) 
-        return 1000/self.M*self.R*T*(tau*(self.da0dtau(delta,tau) + self.dardtau(delta,tau)))     
+# This doesn't seem to be used
+#    def u(self,rho,T):
+#        tau = self._tau(T)
+#        delta = self._delta(rho) 
+#        return 1000/self.M*self.R*T*(tau*(self._da0dtau(delta,tau) + self._dardtau(delta,tau)))     
 
-    def dpdt(self,rho,T):
-        tau = self.tau(T)
-        delta = self.delta(rho)
+    def _dpdt(self,rho,T):
+        tau = self._tau(T)
+        delta = self._delta(rho)
         # Pressure must be adjusted by factor 1000
-        return 1000*rho/self.M*self.R*(1+delta*self.darddelta(delta,tau) - delta*tau*self.dar2ddeltadtau(delta,tau))
+        return 1000*rho/self.M*self.R*(1+delta*self._darddelta(delta,tau) - delta*tau*self._dar2ddeltadtau(delta,tau))
 
-    def drhodp(self,rho,T):
-        tau = self.tau(T)
-        delta = self.delta(rho)
-        return self.M/(1000*self.R*T*(1 + 2*delta*self.darddelta(delta,tau) + delta**2 * self.dar2ddelta2(delta,tau)  ))
+    def _drhodp(self,rho,T):
+        tau = self._tau(T)
+        delta = self._delta(rho)
+        return self.M/(1000*self.R*T*(1 + 2*delta*self._darddelta(delta,tau) + delta**2 * self._dar2ddelta2(delta,tau)  ))
 
-    def sonic(self,rho,T):
-        tau = self.tau(T)
-        delta = self.delta(rho)
-        return np.sqrt(T*self.R/self.M*1000*(1 + 2*delta*self.darddelta(delta,tau) + delta**2 * self.dar2ddelta2(delta,tau)
-        - (1+delta*self.darddelta(delta,tau) - delta*tau*self.dar2ddeltadtau(delta,tau))**2 / \
-        (tau**2*(self.da02dtau2(delta,tau)+self.dar2dtau2(delta,tau)) ) ))
+# This doesn't seem to be used
+#    def sonic(self,rho,T):
+#        tau = self._tau(T)
+#        delta = self._delta(rho)
+#        return np.sqrt(T*self.R/self.M*1000*(1 + 2*delta*self._darddelta(delta,tau) + delta**2 * self._dar2ddelta2(delta,tau)
+#        - (1+delta*self._darddelta(delta,tau) - delta*tau*self._dar2ddeltadtau(delta,tau))**2 / \
+#        (tau**2*(self._da02dtau2(delta,tau)+self._dar2dtau2(delta,tau)) ) ))
                     
             
     def eqState(self,p,T,rhoGuess=500):
-        pGuess = self.pressure(rhoGuess,T)
+        pGuess = self._pressure(rhoGuess,T)
         while abs(pGuess-p)>1:
-            drdp = self.drhodp(rhoGuess,T)
+            drdp = self._drhodp(rhoGuess,T)
             rhoGuess = rhoGuess + drdp*(p-pGuess)
-            pGuess = self.pressure(rhoGuess,T)
+            pGuess = self._pressure(rhoGuess,T)
         return rhoGuess
 
         
@@ -252,14 +255,14 @@ class thermo:
         kii = (self.C[0] + self.C[1]*psi1+self.C[2]*psi2)*Gamma**3
         
         # Find attractive, ideal and additional repulsive pressure
-        (pa,pid,dpr) = self.pressures(rho,T)
+        (pa,pid,dpr) = self._pressures(rho,T)
         # Rewrite from mPa*s to Pa*s
         return (mu0+pa*ka+dpr*kr+pid*ki+pa**2*kaa+dpr**2*krr+pid**2*kii)/1000
         
-    def pressures(self,rho,T):
-        p = self.pressure(rho,T) 
+    def _pressures(self,rho,T):
+        p = self._pressure(rho,T) 
         # Attractive pressure pa equals "internal pressure"
-        pa = p - self.dpdt(rho,T)*T
+        pa = p - self._dpdt(rho,T)*T
         # Ideal pressure pid found from ideal gas theory
         pid = rho*T*self.R/self.M*1000
         dpr = p-pa-pid
@@ -277,23 +280,23 @@ class thermo:
     
     
     def conductivity(self,rho,T):
-        return self.lambda0(rho,T) + self.lambda_exc(rho,T) + self.lambda_cr(rho,T)
+        return self._lambda0(rho,T) + self._lambda_exc(rho,T) + self._lambda_cr(rho,T)
     
-    def lambda0(self,rho,T):
+    def _lambda0(self,rho,T):
         Tst = T/self.eps_kb
-        return (1.39463*(T/self.M_t)**(1.0/2.0) * (self.cint_block(T)) )/(np.pi*self.sigma**2*self.G(Tst))/1e3
+        return (1.39463*(T/self.M_t)**(1.0/2.0) * (self._cint_block(T)) )/(np.pi*self.sigma**2*self._G(Tst))/1e3
          
-    def G(self,Tst):
+    def _G(self,Tst):
         lnG = sum( [self.a_t[i]*np.log(Tst)**i for i in range(8)] )
         return np.exp(lnG)
 
-    def cint_block(self,T):
+    def _cint_block(self,T):
         f = self.f        
         u =f[10]/T
         return 2.0/5.0*4.0* (sum([f[i]*T**(i/3.0) for i in range(1,7)]) + \
         sum([f[i]*T**(i-4) for i in range(7,9)]) + f[9]*(u**2*np.exp(u))/(np.exp(u)-1)**2 )
         
-    def lambda_exc(self,rho,T):
+    def _lambda_exc(self,rho,T):
         rhoM = rho/self.M_t
         Tr = T/self.Tcrit
         l = self.l
@@ -303,38 +306,38 @@ class thermo:
                 s = s+l[i][j]*rhoM**i*Tr**j
         return s/1000
    
-    def lambda_cr(self,rho,T):
+    def _lambda_cr(self,rho,T):
         Rd = self.R_cond
         k_B = self.k_B
         eta = self.viscosity(rho,T)
-        ksi = self.ksi(rho,T)
+        ksi = self._ksi(rho,T)
         cp = self.cp(rho,T)
-        omega = self.omega_bar(rho,T,ksi)
-        omega0 = self.omega_bar0(rho,T,ksi)
+        omega = self._omega_bar(rho,T,ksi)
+        omega0 = self._omega_bar0(rho,T,ksi)
         return rho*cp*Rd*k_B*T*(omega-omega0) / (6*np.pi*eta*ksi)
        
-    def ksi(self,rho,T):
-        return self.ksi0 * (self.deltachistar(rho,T)/self.Gamma)**(self.nu/self.gamma)
+    def _ksi(self,rho,T):
+        return self.ksi0 * (self._deltachistar(rho,T)/self.Gamma)**(self.nu/self.gamma)
         
-    def chistar(self,rho,T):  
-        pc = self.pressure(self.rhocrit(),self.Tcrit)
-        drhodp = self.drhodp(rho,T)
-        return rho * drhodp * pc/self.rhocrit()**2
+    def _chistar(self,rho,T):  
+        pc = self._pressure(self._rhocrit(),self.Tcrit)
+        drhodp = self._drhodp(rho,T)
+        return rho * drhodp * pc/self._rhocrit()**2
         
-    def deltachistar(self,rho,T):
+    def _deltachistar(self,rho,T):
         Tr = 2 * self.Tcrit
-        deltachi = self.chistar(rho,T) - self.chistar(rho,Tr)*Tr/T
+        deltachi = self._chistar(rho,T) - self._chistar(rho,Tr)*Tr/T
         if deltachi>0:
             return deltachi
         else:
             # Give finite but non-zero value if temperature is above reference temperature
             return 1e-15
     
-    def omega_bar(self,rho,T,ksi):
+    def _omega_bar(self,rho,T,ksi):
         cp = self.cp(rho,T)
         cv = self.cv(rho,T)
         return 2.0/np.pi * (((cp-cv)/cp) * np.arctan(self.qdb*ksi) + cv/cp*self.qdb*ksi)
         
-    def omega_bar0(self,rho,T,ksi):
+    def _omega_bar0(self,rho,T,ksi):
         return 2.0/np.pi*(1-np.exp(-1/((self.qdb*ksi)**(-1) + \
-        (self.qdb*ksi*self.rhocrit()/rho)**2/3)))
+        (self.qdb*ksi*self._rhocrit()/rho)**2/3)))
