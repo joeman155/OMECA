@@ -115,27 +115,32 @@ class thermo:
     R_cond = 1.01
     M_cond = 16.043
     
-    e_over_k = 174     
+# This is not used.
+#    e_over_k = 174     
     
     ###
     # Equation of state    
     ###
     
+    # Density of Methane when in critical temperature/pressure
     def _rhocrit(self):
         return self.rho_M_crit*self.M
     
+    # ratio of critical temperature with temperature of Methane
     def _tau(self,T):
-        # Tcrit = 190.564000000
         return self.Tcrit/T
         
+    # Delta Density
     def _delta(self,rho):
         return rho/self.M/self.rho_M_crit
 
+    # Some co-efficient used to model changes over various temperatures/densities.
     def _ar(self,delta,tau):
         alpha_r = sum( [ self.noik[i] * delta**self.doik[i] * tau**self.toik[i] for i in range(1,self.Kpoli+1)   ] ) + \
         sum( [ self.noik[i] * delta**self.doik[i] * tau**self.toik[i] * np.exp(-delta**self.coik[i]) for i in range(self.Kpoli+1,self.Kpoli+self.Kexpi+1)   ] )
         return alpha_r
 
+    # Some co-efficient used to model changes over various temperatures/densities.
     def _a0(self,delta,tau):      
         alpha_0 = self.Rstar/self.R * (np.log(delta) + self.noik0[1] + self.noik0[2]*tau + self.noik0[3]*np.log(tau) + 
         sum ( [ self.noik0[i]*np.log(abs(np.sinh(self.thoik[i]*tau))) for i in [4,6] ] ) -
@@ -143,6 +148,7 @@ class thermo:
         )
         return alpha_0
         
+    # First order derivatives
     def _darddelta(self,delta,tau,ddelta=0.001):
         return (self._ar(delta+ddelta,tau) - self._ar(delta-ddelta,tau))/(2*ddelta)
 
@@ -152,7 +158,7 @@ class thermo:
     def _dardtau(self,delta,tau,dtau=0.001):
         return (self._ar(delta,tau+dtau) - self._ar(delta,tau-dtau))/(2*dtau)
 
-    # Second derivatives
+    # Second order derivatives
     def _dar2dtau2(self,delta,tau,dtau=0.001):
         return (self._ar(delta,tau+dtau) - 2*self._ar(delta,tau) + self._ar(delta,tau-dtau))/(dtau**2)
         
@@ -166,12 +172,14 @@ class thermo:
         return (self._ar(delta+ddelta,tau+dtau) + self._ar(delta-ddelta,tau-dtau) \
         - self._ar(delta-ddelta,tau+dtau) - self._ar(delta+ddelta,tau-dtau)   )/(4*ddelta*dtau) 
 
+    # Pressure of Methane at density/temperature
     def _pressure(self,rho,T):
         tau = self._tau(T)
         delta = self._delta(rho)
         # Model is based on mol/l density, so pressure must be adjusted by factor 1000
         return (1 + delta * self._darddelta(delta,tau)) * rho/self.M*self.R*T*1000
 
+    # Specific Energy at Constant Pressure for Methane at density/temperature
     def cp(self,rho,T):
         tau = self._tau(T)
         delta = self._delta(rho)        
@@ -179,6 +187,7 @@ class thermo:
         (1 + delta*self._darddelta(delta,tau) - delta*tau*self._dar2ddeltadtau(delta,tau))**2 / \
         (1 + 2*delta*self._darddelta(delta,tau) + delta**2 * self._dar2ddelta2(delta,tau)) )
 
+    # Specific Energy at Constant Volume for Methane at density/temperature
     def cv(self,rho,T):
         tau = self._tau(T)
         delta = self._delta(rho) 
@@ -196,12 +205,14 @@ class thermo:
 #        delta = self._delta(rho) 
 #        return 1000/self.M*self.R*T*(tau*(self._da0dtau(delta,tau) + self._dardtau(delta,tau)))     
 
+    # Derivate of pressure with respect to temperature
     def _dpdt(self,rho,T):
         tau = self._tau(T)
         delta = self._delta(rho)
         # Pressure must be adjusted by factor 1000
         return 1000*rho/self.M*self.R*(1+delta*self._darddelta(delta,tau) - delta*tau*self._dar2ddeltadtau(delta,tau))
 
+    # Not sure
     def _drhodp(self,rho,T):
         tau = self._tau(T)
         delta = self._delta(rho)
@@ -216,6 +227,7 @@ class thermo:
 #        (tau**2*(self._da02dtau2(delta,tau)+self._dar2dtau2(delta,tau)) ) ))
                     
             
+    # Derive density from temperature.
     def eqState(self,p,T,rhoGuess=500):
         pGuess = self._pressure(rhoGuess,T)
         while abs(pGuess-p)>1:
@@ -229,17 +241,17 @@ class thermo:
     # Described in Generalization of the friction theory for viscosity modeling, Quiñones-Cisneros, Sergio E. and Deiters, Ulrich K.
     # Doi: 10.1021/jp0618577   
     
-    def psi1(self,tau):
-        return np.exp(tau) - 1
+#    def psi1(self,tau):
+#        return np.exp(tau) - 1
+#        
+#    def psi2(self,tau):
+#        return np.exp(tau**2) - 1
         
-    def psi2(self,tau):
-        return np.exp(tau**2) - 1
-        
-    def Tr(self,T):
+    def _Tr(self,T):
         return T/self.Tcrit
 
     def viscosity(self,rho,T):
-        Tr = self.Tr(T)
+        Tr = self._Tr(T)
         Gamma = 1/Tr
         
         mu0 = self.d[0]+self.d[1]*Tr**0.25+self.d[2]*Tr**0.5+self.d[3]*Tr**0.75
