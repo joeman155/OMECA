@@ -26,7 +26,7 @@ density_array = np.empty((14,11), float)
 
 lnum = 0
 for line in content:
-    print(line)
+    # print(line)
     pair = 0
     idx = 0
     for record in line.split(" "):
@@ -34,8 +34,8 @@ for line in content:
         pair = pair + 1
         if pair % 2 == 0:
             density = record
-            print("Pair = ", idx, ", Process pair")
-            print("For Temp: ", temps[idx], ", we have at Pressure: ", pressure, " with a density of ", density)
+            # print("Pair = ", idx, ", Process pair")
+            # print("For Temp: ", temps[idx], ", we have at Pressure: ", pressure, " with a density of ", density)
             density_array[lnum][idx] = density
             idx = idx + 1
         else:
