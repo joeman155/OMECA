@@ -20,13 +20,38 @@
 import numpy as np
 from scipy.interpolate import interp2d
 
+temps = np.array([], np.float)
+# k = np.empty((14,11), float)   # rows, cols
+k = []
+
 
 def interCond(pressure, temperature):
-	print("Finding thermal conductivity for Pressure: ", pressure, " MPa, Temperature: ", temperature, " Kelvin")
+    print("Finding thermal conductivity for Pressure: ", pressure, " MPa, Temperature: ", temperature, " Kelvin")
+    max_temp = np.max(temps)
+    min_temp = np.min(temps)
+    if temperature > max_temp or temperature < min_temp:
+        print("Temperature is outside bounds of data")
+        return
+    lower_temp = 0
+    upper_temp = 0
+    for temp in temps:
+        # print("Comparing ", temperature, " with ", temp)
+        if temperature < float(temp) and lower_temp > 0:
+            upper_temp = previous_temp
+            break
+        if temperature < float(temp) and lower_temp == 0:
+            lower_temp = float(previous_temp)
+        previous_temp = float(temp)
 
 
 
-
+    print("lower temp: ", lower_temp)
+    print("upper temp: ", upper_temp)
+    if lower_temp > 0 and upper_temp > 0:
+       print("Locating pressures....")
+    else:
+       print("Unable to get temperature bounded")
+       return
 
 
 
@@ -35,10 +60,6 @@ data = open(file)
 content = data.readlines()
 data.close()
 
-
-temps = np.array([])
-# k = np.empty((14,11), float)   # rows, cols
-k = []
 
 
 
@@ -51,13 +72,13 @@ for line in content:
     if lnum > 0:
        if values[0][0] != index_prefix:
            idx = idx + 1
-           temp = values[2]  # Adopt first temp as "index" (close enough)
+           temp = float(values[2])  # Adopt first temp as "index" (close enough)
            temps = np.append(temps, temp)
            k.append(data)
            data = {}
     else:
        temp = values[2]      # Adopt first temp as "index" (close enough)
-       temps = np.append(temps, temp)
+       temps = np.append(temps, float(temp))
        data = {}
     # print("For Index: ", values[0], " Temp: ", values[2], ", Pressure: ", values[3], " we have conductivity of: ", values[5])
     # print(values[0][0], ", Index: ", idx, ", index temp: ", temp)
@@ -76,6 +97,7 @@ for t in temps:
     print(t)
 
 
-interCond(5, 330)
+print(temps)
+interCond(5.0, 330.0)
 
 
