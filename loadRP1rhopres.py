@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+# -*- coding: latin-1 -*-
+
 #
 # RP-1 Density, pressure, temperature characteristics
 #
