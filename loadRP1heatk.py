@@ -21,13 +21,8 @@ import numpy as np
 from scipy.interpolate import interp2d
 from scipy import interpolate
 
-temps = np.array([], np.float)
-# k = np.empty((14,11), float)   # rows, cols
-k = []
 
-
-def interCond(pressure, temperature):
-    print("Finding thermal conductivity for Pressure: ", pressure, " MPa, Temperature: ", temperature, " Kelvin")
+def interCond(k, temps, pressure, temperature):
     max_temp = np.max(temps)
     min_temp = np.min(temps)
     if temperature > max_temp or temperature < min_temp:
@@ -50,93 +45,74 @@ def interCond(pressure, temperature):
         previous_temp = float(temp)
         idx = idx + 1
 
-
-
-    print("lower temp: ", lower_temp)
-    print("upper temp: ", upper_temp)
-    print("lower idx: ", lower_idx)
-    print("upper idx: ", upper_idx)
     if lower_temp > 0 and upper_temp > 0:
-       print("Locating pressures....")
-       
-       # Lower Temp side
-       pressures = list(k[lower_idx].keys())
-       # for p in pressures:
-       #     print("Pressure p: ", p, " has conductivity: ", k[lower_idx][p])
-       #    print(p)
+        # Lower Temp side
+        pressures = list(k[lower_idx].keys())
+        conductivities = list(k[lower_idx].values())
 
-       conductivities = list(k[lower_idx].values())
-       # for c in conductivities:
-       #     print(c)
-       # print(pressures.shape)
-       # print(conductivities.shape)
+        f = interpolate.interp1d(pressures, conductivities)
+        lower_kval = f(pressure)
 
-       f = interpolate.interp1d(pressures, conductivities)
-       lower_kval = f(pressure)
-       print("LOWER Interpolated thermal conductivity: ", lower_kval)
+        # Upper Temp side
+        pressures = list(k[upper_idx].keys())
+        conductivities = list(k[upper_idx].values())
+        f = interpolate.interp1d(pressures, conductivities)
+        upper_kval = f(pressure)
 
-       # Upper Temp side
-       pressures = list(k[upper_idx].keys())
-       conductivities = list(k[upper_idx].values())
-       f = interpolate.interp1d(pressures, conductivities)
-       upper_kval = f(pressure)
-       print("UPPER Interpolated thermal conductivity: ", upper_kval)
+        # Interpolate between the two temperatures, to give us the final result
+        f = interpolate.interp1d([lower_temp, upper_temp], [lower_kval, upper_kval])
+        kval = f(temperature)
 
-
-       # Interpolate between the two temperatures, to give us the final result
-       f = interpolate.interp1d([lower_temp, upper_temp], [lower_kval, upper_kval])
-       kval = f(temperature)
-       print("Final thermal conductivity: ", kval)
+        return kval
 
     else:
-       print("Unable to get temperature bounded")
-       return
+        print("Unable to get temperature bounded")
+        return
 
 
+def loadConductivityData():
+    file = "rp1heatk.txt"
+    data = open(file)
+    content = data.readlines()
+    data.close()
 
-file = "rp1heatk.txt"
-data = open(file)
-content = data.readlines()
-data.close()
+    temps = np.array([], float)
+    k = []
 
+    lnum = 0
+    idx = 0
+    for line in content:
+        # print(line)
+        values = line.split(" ")
+        if lnum > 0:
+            if values[0][0] != index_prefix:
+                idx = idx + 1
+                temp = float(values[2])  # Adopt first temp as "index" (close enough)
+                temps = np.append(temps, temp)
+                k.append(data)
+                data = {}
+        else:
+            temp = values[2]  # Adopt first temp as "index" (close enough)
+            temps = np.append(temps, float(temp))
+            data = {}
+        # print("For Index: ", values[0], " Temp: ", values[2], ", Pressure: ", values[3], " we have conductivity of: ", values[5])
+        # print(values[0][0], ", Index: ", idx, ", index temp: ", temp)
 
+        # idx  = row  (TEMP)
+        # lnum = col (PRESSURE)
+        data[float(values[3])] = float(values[5])
+        # print(data)
+        lnum = lnum + 1
+        index_prefix = values[0][0]
 
-
-
-lnum = 0
-idx = 0
-for line in content:
-    # print(line)
-    values = line.split(" ")
-    if lnum > 0:
-       if values[0][0] != index_prefix:
-           idx = idx + 1
-           temp = float(values[2])  # Adopt first temp as "index" (close enough)
-           temps = np.append(temps, temp)
-           k.append(data)
-           data = {}
-    else:
-       temp = values[2]      # Adopt first temp as "index" (close enough)
-       temps = np.append(temps, float(temp))
-       data = {}
-    # print("For Index: ", values[0], " Temp: ", values[2], ", Pressure: ", values[3], " we have conductivity of: ", values[5])
-    # print(values[0][0], ", Index: ", idx, ", index temp: ", temp)
-
-    # idx  = row  (TEMP)
-    # lnum = col (PRESSURE)
-    data[float(values[3])] = float(values[5])
-    # print(data)
-    lnum = lnum + 1 
-    index_prefix = values[0][0]
-
-
-print(k)
-
-for t in temps:
-    print(t)
+    return k, temps
 
 
+k, temps = loadConductivityData()
 print(temps)
-interCond(5.0, 360.0)
 
-
+pressure = 4.0
+temperature = 460
+print("Finding thermal conductivity for Pressure: ", pressure, " MPa, Temperature: ", temperature, " Kelvin")
+kval = interCond(k, temps, pressure, temperature)
+print("Final thermal conductivity: ", kval)
