@@ -19,6 +19,7 @@
 # Initialize and import packages
 import numpy as np
 from scipy.interpolate import interp2d
+from scipy import interpolate
 
 temps = np.array([], np.float)
 # k = np.empty((14,11), float)   # rows, cols
@@ -34,21 +35,50 @@ def interCond(pressure, temperature):
         return
     lower_temp = 0
     upper_temp = 0
+    lower_idx = 0
+    upper_idx = 0
+    idx = 0
     for temp in temps:
         # print("Comparing ", temperature, " with ", temp)
         if temperature < float(temp) and lower_temp > 0:
             upper_temp = previous_temp
+            upper_idx = idx - 1
             break
         if temperature < float(temp) and lower_temp == 0:
             lower_temp = float(previous_temp)
+            lower_idx = idx - 1
         previous_temp = float(temp)
+        idx = idx + 1
 
 
 
     print("lower temp: ", lower_temp)
     print("upper temp: ", upper_temp)
+    print("lower idx: ", lower_idx)
+    print("upper idx: ", upper_idx)
     if lower_temp > 0 and upper_temp > 0:
        print("Locating pressures....")
+       
+       # Lower Temp side
+       pressures = list(k[lower_idx].keys())
+       # for p in pressures:
+       #     print("Pressure p: ", p, " has conductivity: ", k[lower_idx][p])
+       #    print(p)
+
+       conductivities = list(k[lower_idx].values())
+       # for c in conductivities:
+       #     print(c)
+       # print(pressures.shape)
+       # print(conductivities.shape)
+
+       f = interpolate.interp1d(pressures, conductivities)
+       kval = f(pressure)
+       print("Interpolated thermal conductivity: ", kval)
+
+       # Upper Temp side
+       
+
+
     else:
        print("Unable to get temperature bounded")
        return
@@ -85,7 +115,7 @@ for line in content:
 
     # idx  = row  (TEMP)
     # lnum = col (PRESSURE)
-    data[values[3]] = values[5]
+    data[float(values[3])] = float(values[5])
     # print(data)
     lnum = lnum + 1 
     index_prefix = values[0][0]
@@ -98,6 +128,6 @@ for t in temps:
 
 
 print(temps)
-interCond(5.0, 330.0)
+interCond(5.0, 360.0)
 
 
