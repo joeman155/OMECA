@@ -72,12 +72,21 @@ def interCond(pressure, temperature):
        # print(conductivities.shape)
 
        f = interpolate.interp1d(pressures, conductivities)
-       kval = f(pressure)
-       print("Interpolated thermal conductivity: ", kval)
+       lower_kval = f(pressure)
+       print("LOWER Interpolated thermal conductivity: ", lower_kval)
 
        # Upper Temp side
-       
+       pressures = list(k[upper_idx].keys())
+       conductivities = list(k[upper_idx].values())
+       f = interpolate.interp1d(pressures, conductivities)
+       upper_kval = f(pressure)
+       print("UPPER Interpolated thermal conductivity: ", upper_kval)
 
+
+       # Interpolate between the two temperatures, to give us the final result
+       f = interpolate.interp1d([lower_temp, upper_temp], [lower_kval, upper_kval])
+       kval = f(temperature)
+       print("Final thermal conductivity: ", kval)
 
     else:
        print("Unable to get temperature bounded")
