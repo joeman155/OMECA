@@ -17,7 +17,7 @@ from scipy.interpolate import interp2d
 
 
 def loadDensityData():
-    PRHO_file = "rp1data.txt"
+    PRHO_file = "rp1ThermalConddata.txt"
     data = open(PRHO_file)
     content = data.readlines()
     data.close()
