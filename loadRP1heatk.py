@@ -107,10 +107,11 @@ def loadConductivityData():
 
     return k, temps
 
-
+# Load Rp-1 Conductivity Data
 k, temps = loadConductivityData()
 print(temps)
 
+# Demonstrate how we get the conductivity for given pressure/temperature
 pressure = 4.0
 temperature = 460
 print("Finding thermal conductivity for Pressure: ", pressure, " MPa, Temperature: ", temperature, " Kelvin")
