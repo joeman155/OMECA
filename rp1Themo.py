@@ -22,7 +22,7 @@ rp1_M = 123     # Grams per mole
 
 
 #
-# Load specific heat capacity data data from file into memory structures
+# cp - Load specific heat capacity at Constant Pressure data from file into memory structures
 #
 # Example usage
 #
@@ -31,7 +31,23 @@ rp1_M = 123     # Grams per mole
 # Temperatures from ??? K to ??? K
 # Pressures    from ??? MPa to ??? MPa
 #
+def loadCp:
+    print("Loading cp data")
 
+
+
+#
+# cv - Load specific heat capacity at Constant Volume data from file into memory structures
+#
+# Example usage
+#
+#
+# Range of data
+# Temperatures from ??? K to ??? K
+# Pressures    from ??? MPa to ??? MPa
+#
+def loadCv:
+    print("Loading cv data")
 
 
 #
@@ -81,7 +97,7 @@ def loadDensityData():
 # Range of data
 # Temperatures from 270 to 470K
 # Pressures    from 0.083MPa to 40 MPa
-`
+#
 def loadViscosityData():
     file = "rp1ViscosityData.txt"
     data = open(file)

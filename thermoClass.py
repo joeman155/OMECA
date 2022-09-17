@@ -245,7 +245,7 @@ class thermo:
     #  - Temperature
     #
     # Notes: The derivative of density with respect to pressure depends upon temperature and density. For this reason,
-    #        we need a while loop, to find density that is consistent.
+    #        we need a while loop, to find density that is self consistent.
     #
     def eqState(self,p,T,rhoGuess=500):
         pGuess = self._pressure(rhoGuess,T)

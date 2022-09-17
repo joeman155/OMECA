@@ -227,11 +227,13 @@ for i in range(1,len(xVals)):
 
     while (abs(TwNew-Tw)>0.1) and (abs(TwChannel-TwChannelNew)>0.1):
         Tw = TwNew  
-        TwChannel = TwChannelNew             
+        TwChannel = TwChannelNew
+        # HOT GASES
         # Calculate convective coefficient using Bartz
         hg = th.bartz(T0,Tw,p0,Mg,rt*2,aRatio,mug,cpg,Prg,gg,cstar)
         hg = hg/0.026*0.0195
 
+        # COOLANT
         # Calculate Nusselt number
         Nu = th.Taylor(Re,Pr,T,TwChannel,Dh,x)
         #Nu = th.dittusBoelter(Re,Pr)

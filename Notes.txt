@@ -1,0 +1,123 @@
+cp
+cv
+eqState  (find density)
+viscosity  (Pa s)
+thermal conductivity
+
+
+        hg = th.bartz(T0,Tw,p0,Mg,rt*2,aRatio,mug,cpg,Prg,gg,cstar)
+T0 = from CEA File (starting temperature I think)
+Tw = Temperature of wall. STarts at 400, which I think is like an initial guess
+p0 = from CEA File (starting pressure I think)
+Mg = from CEA File (interpolation of data)  (Molar mass)
+rt = Radius of throat
+aRatio = Ratio of area at station to Area at throat
+mug = from CEA File (interpolation of data)  (Viscosity??)
+cpg = from CEA File (interpolation of data)  (specific heat capacity at constant pressure)
+Prg = from CEA File (interpolation of data)  (PRESSURE)
+gg = from CEA File (interpolation of data)   (NOT SURE)
+cstar = from CEA File
+
+
+
+Nu = th.Taylor(Re,Pr,T,TwChannel,Dh,x)   [ IS THIS THE RIGHT FORMULA FOR RP-1]
+Re = Renolyds number
+Pr = Prantl Number
+T  = Temperature of coolant
+TwChannel = Temperature of channel wall near coolant
+Dh = Hydraulic diameter of channel.
+x  = Where the station is.
+
+
+
+
+Dh = th.Dh_rect(channelWidth,channelHeight)
+channelWidth = channelWidth at station
+channelHeight = channelHeight at station
+
+
+
+
+
+# COOLANT:  Calculate bulk flow properties of coolant
+Re = V*rho*Dh/mu
+V = Speed of coolant
+rho = Density of coolant.
+Dh = Hydraulic diameter of channel
+mu = Viscosity of Coolant (Dynamic viscosity, Pa a)
+
+
+
+
+Pr = mu*cp/kap
+mu = Viscosity of Coolant (Dynamic viscosity, Pa a)
+cp = specific heat capacity at constant pressure of coolant.
+kap = Thermal conductivity of coolant.
+
+
+
+
+Nu = Nu*Ci*Cksi
+Nu = nusselt number
+Ci = Correction for curvature of channels
+Cksi = Correction for something else?   [JOE TO INVESTIGATE]
+
+
+
+
+hc = Nu*kap/Dh
+Nu = nusselt number
+kap = Thermal conductivity of coolant.
+Dh = Hydraulic diameter of channel.
+
+
+
+# Incorporate heat transfer fin effectiveness into hc (Heat Transfer coefficient for hot gases)
+m = np.sqrt(2*hc*tRib/kChamber)
+hc = heat coefficient calculated previously
+tRib = Thickness of rib - Channel design.
+kChamber = Thermal conductivity of channel material (copper)
+
+
+
+finEffectiveness = np.tanh(m/tRib*channelHeight)/(m/tRib*channelHeight)
+m = defined previously. See above.
+<rest are channel dimensions>
+
+
+
+hc = hc*(channelWidth + finEffectiveness*2*channelHeight) / (channelWidth+tRib)
+channelWidth = Width of channel
+finEffectiveness = Defined previously.
+channelHeight = Height of channel
+tRib = Thickness of material between channels. [Is it 1/2 this value?]
+
+
+
+
+
+
+
+
+
+# Calculate radiative heat transfer (Suspect this is for the MAIN products of combustion)
+qW = 5.74 * (pWater/1e5*Rnozzle)**0.3 * (Taw/100)**3.5    # Water
+pWater  = From CEA Data [DENSITY OF WATER]
+Rnozzle = Radius of nozzle at current station.
+Taw     = Adiabatic temperature of gases at wall.
+
+
+
+
+qC = 4 * (pCarbDiox/1e5*Rnozzle)**0.3 * (Taw/100)**3.5    # Carbon Dioxide
+pCarbDiox  = Density of Carbon Dioxide gas at station
+Taw     = Adiabatic temperature of gases at wall.
+
+
+
+
+
+qRad = qW+qC
+= Sum of two quantities above
+
+Rad = Radiant.
