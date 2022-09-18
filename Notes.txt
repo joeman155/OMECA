@@ -1,5 +1,5 @@
 cp
-cv
+cv      - not applicable if the coolant is in liquid phase the whole time it is going through the channels.
 eqState  (find density)
 viscosity  (Pa s)
 thermal conductivity
@@ -40,11 +40,11 @@ channelHeight = channelHeight at station
 
 
 # COOLANT:  Calculate bulk flow properties of coolant
-Re = V*rho*Dh/mu
-V = Speed of coolant
+Re  = V*rho*Dh/mu
+V   = Speed of coolant
 rho = Density of coolant.
-Dh = Hydraulic diameter of channel
-mu = Viscosity of Coolant (Dynamic viscosity, Pa a)
+Dh  = Hydraulic diameter of channel
+mu  = Viscosity of Coolant (Dynamic viscosity, Pa a)
 
 
 
@@ -58,7 +58,7 @@ kap = Thermal conductivity of coolant.
 
 
 Nu = Nu*Ci*Cksi
-Nu = nusselt number
+Nu = nusselt number  (derived from Taylor equation above)
 Ci = Correction for curvature of channels
 Cksi = Correction for something else?   [JOE TO INVESTIGATE]
 

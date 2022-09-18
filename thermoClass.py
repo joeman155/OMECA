@@ -196,10 +196,14 @@ class thermo:
         (1 + delta*self._darddelta(delta,tau) - delta*tau*self._dar2ddeltadtau(delta,tau))**2 / \
         (1 + 2*delta*self._darddelta(delta,tau) + delta**2 * self._dar2ddelta2(delta,tau)) )
 
-    # Specific Energy at Constant Volume for Methane 
+    # Specific Energy at Constant Volume for Methane
     # Parameters
     #  - Density
     #  - Temperature
+    #
+    # The cv is required because methane is around the critical point and the gas component of methane affects the
+    # conductivity.
+    #
     def cv(self,rho,T):
         tau = self._tau(T)
         delta = self._delta(rho) 

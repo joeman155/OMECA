@@ -177,7 +177,7 @@ for i in range(1,len(xVals)):
     # COOLANT: Calculate thermodynamic properties of methane at current (rho,T)
     mu = methane.viscosity(rho,T)
     cp = methane.cp(rho,T)
-    gam = cp/methane.cv(rho,T)
+    # gam = cp/methane.cv(rho,T)
     kap = methane.conductivity(rho,T)
 
     # COOLANT:  Calculate bulk flow properties of coolant
