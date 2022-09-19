@@ -65,14 +65,16 @@ def frictionFactor(Dh, roughness, Re):
     return guess
 
 
-class thermorp1:
+class rp1thermo:
     # Define rp-1 constants
     rp1_M = 175  # Grams per mole
-    cp = 2001  # kJ/Kg/K
+    cp = 2001    # kJ/Kg/K
 
     def __init__(self):
         print("instantiating class.")
-
+        self.loadViscosityData()
+        self.loadDensityData()
+        self.loadConductivityData()
 
     #
     # Load density data from file into memory structures
@@ -111,6 +113,11 @@ class thermorp1:
         self.densityfn = interp2d(temps, pressures, density_array, kind='linear', fill_value='-1')
 
 
+    #
+    # getDensity - Get density for given temperature/pressure
+    #
+    def getDensity(self, pressure, temperature):
+        return self.densityfn(temperature, pressure)
 
     #
     # Load density data from file into memory structures
@@ -152,6 +159,11 @@ class thermorp1:
         self.viscosityfn = interp2d(pressures, temps, viscosities, kind='linear', fill_value='-1')
 
 
+    #
+    # getViscosity - Get viscosity for given temperature/pressure
+    #
+    def getViscoity(self, pressure, temperature):
+        return self.viscosityfn(pressure, temperature)
 
 
     #
@@ -159,7 +171,7 @@ class thermorp1:
     #
     # Example usage
     #
-    #     k, temps = loadConductivityData()
+    #  Instantiating the class loads this data
     #
     #
     #  See interCond function below for example of how to interogate this data to get thermal conducitivies at other temperatures/pressures
@@ -201,17 +213,21 @@ class thermorp1:
 
 
 
+
+
     #
     # Routine used to interpolate thermal conducvitiy data structures to get value
     # Couldn't use normal scipy routines unfortunately.
     #
     # Example usage
     #
-    #     k, temps = loadConductivityData()
+    #     import rp1themoClass as rp1
+    #
+    #     rp = rp1.rp1thermo()
     #     pressure = 4.0
     #     temperature = 460
     #     print("Finding thermal conductivity for Pressure: ", pressure, " MPa, Temperature: ", temperature, " Kelvin")
-    #     kval = interCond(k, temps, pressure, temperature)
+    #     kval = rp.interCond(pressure, temperature)
     #     print("Final thermal conductivity: ", kval)
     #
     # Range of data
