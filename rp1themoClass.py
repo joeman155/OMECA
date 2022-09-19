@@ -38,9 +38,11 @@ def interpol(Tv, param, Tf):
 # See https://www.thermal-engineering.org/what-is-dittus-boelter-equation-definition/  for some details
 #
 #
-d1ef dittusBoelter(Re, Pr):
+def dittusBoelter(Re, Pr):
     if Re < 0.6 or Re > 160:
-        print("Warning: Renolds number (", Re, ") is outside the valid range of 0.6 ... 160. Best to assess suitability of dittusBoelter correlation for this job.")
+        print("Warning: Reynolds number (", Re, ") is outside the valid range of 0.6 ... 160. Best to assess suitability of dittusBoelter correlation for this job.")
+    if Pr < 10000:
+        print("Warning: Prandtl number (", Pr, ") is less than 10000. Best to assess suitability of dittusBoelter correlation for this job.")
     return 0.023 * Re ** 0.8 * Pr ** 0.4
 
 
