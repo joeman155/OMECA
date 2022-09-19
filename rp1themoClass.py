@@ -84,6 +84,13 @@ class rp1thermo:
         self.loadDensityData()
         self.loadConductivityData()
 
+
+    #
+    # Return the cp
+    #
+    def getCp(self):
+        return self.cp
+
     #
     # Load density data from file into memory structures
     #
@@ -246,7 +253,7 @@ class rp1thermo:
         max_temp = np.max(self.cond_temps)
         min_temp = np.min(self.cond_temps)
         if temperature > max_temp or temperature < min_temp:
-            print("Temperature is outside bounds of data")
+            print("Temperature (", temperature, ") is outside bounds of data")
             return
         lower_temp = 0
         upper_temp = 0
