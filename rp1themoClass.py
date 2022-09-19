@@ -34,7 +34,13 @@ def interpol(Tv, param, Tf):
     return intpFunction(Tf)
 
 
-def dittusBoelter(Re, Pr):
+#
+# See https://www.thermal-engineering.org/what-is-dittus-boelter-equation-definition/  for some details
+#
+#
+d1ef dittusBoelter(Re, Pr):
+    if Re < 0.6 or Re > 160:
+        print("Warning: Renolds number (", Re, ") is outside the valid range of 0.6 ... 160. Best to assess suitability of dittusBoelter correlation for this job.")
     return 0.023 * Re ** 0.8 * Pr ** 0.4
 
 
@@ -234,7 +240,7 @@ class rp1thermo:
     # Temperatures from 300 to 645K
     # Pressures    from 0.17MPa to 63 MPa
     #
-    def interCond(self, pressure, temperature):
+    def getConductivity(self, pressure, temperature):
         max_temp = np.max(self.cond_temps)
         min_temp = np.min(self.cond_temps)
         if temperature > max_temp or temperature < min_temp:
