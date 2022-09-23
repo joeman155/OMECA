@@ -162,10 +162,12 @@ for i in range(1,len(xVals)):
     dynPres1 = 0.5*rho*V**2
     dynTemp1 = 0.5*V**2/cp
 
+    print("pt1 = ", p, T)
+
     # COOLANT: Calculate density and flow velocity
     rho = methane.eqState(p,T,rho)
     V = fFlow / (A * rho)
-    # print("Flow Velocity at ", xVals[-i], " is ", V)
+    print("Flow Velocity at ", xVals[-i], " is ", V)
     
     # COOLANT: Calculate/update static pressure and temperature
     dynPres2 = 0.5*rho*V**2
@@ -173,6 +175,8 @@ for i in range(1,len(xVals)):
     
     dynTemp2 = 0.5*V**2/cp
     T = T - (dynTemp2 - dynTemp1)
+
+    print("pt2 = ", p, T)
     
     # COOLANT: Calculate thermodynamic properties of methane at current (rho,T)
     mu = methane.viscosity(rho,T)

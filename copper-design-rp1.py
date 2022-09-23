@@ -37,7 +37,7 @@ roughness = 6e-6  # Not sure what this is, but assume it is right.
 
 # Initialize coolant pressure and temperature
 p = pin = 60e5  # Pressure in Pascals
-T = Tin = 300  # Temperature of coolant at nozzle exit in Kelvin
+T = Tin = 302  # Temperature of coolant at nozzle exit in Kelvin
 
 # Read nozzle coordinates
 cont = np.genfromtxt("nozzleContour.csv", delimiter=",")
@@ -158,25 +158,26 @@ for i in range(1, len(xVals)):
         Dh = th.Dh_rect(channelWidth, channelHeight)
 
     # COOLANT: Calculate dynamic pressure and temperature at previous station
+    print("Old V = ", V)
     dynPres1 = 0.5 * rho * V ** 2
     dynTemp1 = 0.5 * V ** 2 / cp
 
     # COOLANT: Calculate density and flow velocity
     rho = rp1.getDensity(p, T)
     V = fFlow / (A * rho)
-    # print("Flow Velocity at ", xVals[-i], " is ", V)
+    print("Area = ", A, ", Density = ", rho, ", Flow Velocity at ", xVals[-i], " is ", V)
 
     # COOLANT: Calculate/update static pressure and temperature
     dynPres2 = 0.5 * rho * V ** 2
     p = p - (dynPres2 - dynPres1)
-
     dynTemp2 = 0.5 * V ** 2 / cp
-    T = T - (dynTemp2 - dynTemp1)
 
+    T = T - (dynTemp2 - dynTemp1)
+    print("p, T = ", p, T)
     # COOLANT: Calculate thermodynamic properties of methane at current (rho,T)
+
     mu = rp1.getViscoity(p, T)
     cp = rp1.getCp()
-    # gam = cp/methane.cv(rho,T)
     kap = rp1.getConductivity(p, T)
 
     # COOLANT:  Calculate bulk flow properties of coolant
@@ -268,13 +269,18 @@ for i in range(1, len(xVals)):
     # Calculate change in temperature and pressure
     A_heat = 2 * np.pi * Rnozzle * l  # Area of station being considered
     deltaT = q * A_heat / (fFlow * cp)  # Change in temperature of coolant
-    deltap = th.frictionFactor(Dh, roughness, Re) * l / Dh * rho * V ** 2 / 2.0  # Change in pressure of coolant
+    # deltap = th.frictionFactor(Dh, roughness, Re) * l / Dh * rho * V ** 2 / 2.0  # Change in pressure of coolant
+
+    # We expect flow to be mostly laminar, so we use frictionFactorLaminar to calculate the frictionfactor coefficient.
+    deltap = th.frictionFactorLaminar(Re) * l / Dh * rho * V ** 2 / 2.0  # Change in pressure of coolant
     Q = Q + q * A_heat  # Change in enthalpy of coolant
     Atot = Atot + A_heat  # NOT SURE WHAT THIS IS...
     mCur = (2 * np.pi * Rnozzle * l * tChamber + l * tRib * channelHeight * NChannels) * rhoChamber  # ?? change in ??
     mTot = mTot + mCur  # ??
     # Update pressure, temperature and channel length
     p = p - deltap  # Update pressure of coolant
+    fric = th.frictionFactor(Dh, roughness, Re)
+    # print("DELTAP, V, l, Dh, rho, fric, Re, roughness = ", deltap, V, l, Dh, rho, fric, Re, roughness)
     T = T + deltaT  # Update temperature of coolant
     x = x + l  # new X position.
 

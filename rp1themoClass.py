@@ -73,6 +73,16 @@ def frictionFactor(Dh, roughness, Re):
     return guess
 
 
+# For Laminar flow, the frictionFactor is calulated using the correlation below.
+#
+# This is only valid for Reynolds number less than 2300
+#
+def frictionFactorLaminar(Re):
+    if Re > 2300:
+        print("Warning: Reynolds number (", Re, ") is outside the valid range of 0.0 ... 2300. Best to assess suitability of dittusBoelter correlation for this job.")
+    return 64 / Re
+
+
 class rp1thermo:
     # Define rp-1 constants
     rp1_M = 175  # Grams per mole
@@ -132,6 +142,7 @@ class rp1thermo:
     # getDensity - Get density for given temperature/pressure
     #
     def getDensity(self, pressure, temperature):
+        pressure = pressure / 10e5
         return self.densityfn(temperature, pressure)
 
     #
@@ -178,6 +189,7 @@ class rp1thermo:
     # getViscosity - Get viscosity for given temperature/pressure
     #
     def getViscoity(self, pressure, temperature):
+        pressure = pressure / 10e5
         return self.viscosityfn(pressure, temperature)
 
 
@@ -250,10 +262,11 @@ class rp1thermo:
     # Pressures    from 0.17MPa to 63 MPa
     #
     def getConductivity(self, pressure, temperature):
+        pressure = pressure / 10e5
         max_temp = np.max(self.cond_temps)
         min_temp = np.min(self.cond_temps)
         if temperature > max_temp or temperature < min_temp:
-            print("Temperature (", temperature, ") is outside bounds of data")
+            print("Temperature (", temperature, ") is outside bounds of data, ", min_temp, ", ", max_temp)
             return
         lower_temp = 0
         upper_temp = 0
@@ -261,7 +274,6 @@ class rp1thermo:
         upper_idx = 0
         idx = 0
         for temp in self.cond_temps:
-            # print("Comparing ", temperature, " with ", temp)
             if temperature < float(temp) and lower_temp > 0:
                 upper_temp = previous_temp
                 upper_idx = idx - 1
@@ -277,18 +289,26 @@ class rp1thermo:
             pressures = list(self.cond_k[lower_idx].keys())
             conductivities = list(self.cond_k[lower_idx].values())
 
+            pressures.reverse()
+            conductivities.reverse()
+
             f = interpolate.interp1d(pressures, conductivities)
             lower_kval = f(pressure)
 
             # Upper Temp side
             pressures = list(self.cond_k[upper_idx].keys())
             conductivities = list(self.cond_k[upper_idx].values())
+
+            pressures.reverse()
+            conductivities.reverse()
+
             f = interpolate.interp1d(pressures, conductivities)
             upper_kval = f(pressure)
 
             # Interpolate between the two temperatures, to give us the final result
-            f = interpolate.interp1d([lower_temp, upper_temp], [lower_kval, upper_kval])
-            kval = f(temperature)
+            # f = interpolate.interp1d([lower_temp, upper_temp], [lower_kval, upper_kval])
+            f = interpolate.interp1d([lower_temp, upper_temp], [lower_kval[0], upper_kval[0]])
+            kval = f(temperature)[0]
 
             return kval
 
