@@ -60,18 +60,27 @@ def read(fName):
                         mag = "0"
                     rho = np.append(rho,float(val))                
                 
+
     nH2O = np.array([])
+    finished_nH2O = 0
     for line in content:
+        if line[0:69] == "           THEORETICAL ROCKET PERFORMANCE ASSUMING FROZEN COMPOSITION":
+           finished_nH2O = 1
         if line[0:7] == " H2O   ":
-            for val in line[17:].split():
-                nH2O = np.append(nH2O,float(val))
-                
+           if finished_nH2O == 1:
+               pass
+           else:
+               for val in line[17:].split():
+                   nH2O = np.append(nH2O,float(val))
+
+
     nCO2 = np.array([])
     for line in content:
         if line[0:8] == " *CO2   ":
             for val in line[17:].split():
                 nCO2 = np.append(nCO2,float(val))
-                                
+
+    
     mach = np.array([])
     switch_frozen = 0
     for line in content:
@@ -80,7 +89,8 @@ def read(fName):
         if line[0:5] == " MACH":
             for val in line[17:].split():
                 mach = np.append(mach,float(val))            
-    
+
+
     cp = np.array([])
     switch_write = 1
     for line in content:

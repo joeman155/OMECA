@@ -13,8 +13,8 @@ import scipy.interpolate as intp
 import matplotlib.pyplot as plt
 
 # Calculate fuel flow from engine parameters
-mflow   = 0.89229 # kg/s
-OFratio = 2.00 
+mflow   = 3.176 # kg/s
+OFratio = 3.16
 fFlow   = 1/(1+OFratio)*mflow
 
 # Define nozzle material and thickness
@@ -26,18 +26,14 @@ E          = 85e9  # Modulus of elasticity
 s_yield    = 120932000 # Yield strength
 
 # Define channel geometry
-# Not sure where this is defined...throat? Exit? Combustion chamber?
-# I am sure this geometry changes.
-
-
-NChannels     = 30    # Number of channels
-tRib          = 1.5e-3  # Thickness of Rib    
-channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm  # THIS SETTING IS NOT USED IN THIS CODE. IT IS OVERWRITTEN
-roughness     = 6e-6  # Not sure what this is, but assume it is right.
+NChannels = 64
+tRib = 1e-3
+channelHeight = 1e-3
+roughness = 6e-6
 
 # Initialize coolant pressure and temperature
 p = pin = 60e5      # Pressure in Pascals
-T = Tin = 298       # Temperature of coolant at nozzle exit in Kelvin
+T = Tin = 110       # Temperature of coolant at nozzle exit in Kelvin
 
 # Read nozzle coordinates
 cont = np.genfromtxt("nozzleContour.csv",delimiter=",")
@@ -53,7 +49,7 @@ def radiusCurvature(x1,y1,x2,y2,x3,y3):
 xVals = cont[0,::]
 yVals = cont[1,::]
 # Define engine size (throat radius and area)
-rt = 0.01                           # radius of throat of nozzle in meters. Later on, we will calculate this from cont
+rt = 0.0216                           # radius of throat of nozzle in meters. Later on, we will calculate this from cont
 At = rt**2*np.pi
 aRatioMinm = min(yVals**2/rt**2)
 
@@ -65,7 +61,7 @@ def interpol(x,y,xNew,how="linear"):
 # CHANNEL HEIGHT DIMENSIONS AT VARIOUS STATIONS
 # It only allows for varying heights, not varying widths. I think we should allow for varying widths.
 xHeight = np.array([0,  9,  11, 13, 15, 16, 18, 20, 30])*1e-2
-Height = np.array([ 1.5,1.5,2.0,2.3,3.0,4.0,3,2.5,1.5])*1e-3
+Height = np.array([ 0.8,0.8,0.6,1.0,3.0,1.0,0.4,1.1,2])*1e-3
 
 
 

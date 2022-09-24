@@ -8,7 +8,7 @@ Created on Mon May 11 10:59:24 2015
 
 # Initialize and import packages
 import numpy as np
-import CEA
+import CEAbly as CEA
 import rp1themoClass as th
 import scipy.interpolate as intp
 import matplotlib.pyplot as plt
@@ -41,7 +41,7 @@ p = pin = 60e5  # Pressure in Pascals
 T = Tin = 302  # Temperature of coolant at nozzle exit in Kelvin
 
 # Read nozzle coordinates
-cont = np.genfromtxt("nozzleContour.csv", delimiter=",")
+cont = np.genfromtxt("nozzleContourbly.csv", delimiter=",")
 
 
 # Define function for radius of curvature based on coordinates of 3 points
