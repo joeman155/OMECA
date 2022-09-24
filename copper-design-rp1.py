@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
 Created on Mon May 11 10:59:24 2015
@@ -257,6 +258,7 @@ for i in range(1, len(xVals)):
 
         # Calculate heat flux
         q = (Taw - T + qRad / hg) / (1 / hg + tChamber / kChamber + 1 / hc)
+        print("QRad: ", qRad)
 
         # Calculate hot gas wall temperature and channel wall temperature
         TwNew = Taw - (q - qRad) / hg
@@ -327,7 +329,7 @@ lins = list(range(4))
 
 # Wall temperature
 lins[0] = ax.plot(xVals[1:] * 100, Twvals[::-1], 'g--', lw=2, label=r'$T_w$')
-ax.set_ylim([0, round(max(Twvals) + 100, 2)])
+ax.set_ylim([0, np.round(max(Twvals) + 100, 2)])
 
 # Heat flux
 ax2 = ax.twinx()
