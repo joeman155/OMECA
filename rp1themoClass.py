@@ -41,8 +41,10 @@ def interpol(Tv, param, Tf):
 def dittusBoelter(Re, Pr):
     if Re < 0.6 or Re > 160:
         print("Warning: Reynolds number (", Re, ") is outside the valid range of 0.6 ... 160. Best to assess suitability of dittusBoelter correlation for this job.")
+        exit
     if Pr < 10000:
         print("Warning: Prandtl number (", Pr, ") is less than 10000. Best to assess suitability of dittusBoelter correlation for this job.")
+        exit
     return 0.023 * Re ** 0.8 * Pr ** 0.4
 
 
@@ -135,7 +137,8 @@ class rp1thermo:
                     pressure = record
             lnum = lnum + 1
 
-        self.densityfn = interp2d(temps, pressures, density_array, kind='linear', fill_value='-1')
+        # self.densityfn = interp2d(temps, pressures, density_array, kind='linear', fill_value='-1')
+        self.densityfn = interp2d(temps, pressures, density_array, kind='linear')
 
 
     #

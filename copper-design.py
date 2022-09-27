@@ -243,6 +243,7 @@ for i in range(1,len(xVals)):
         Nu = Nu*Ci*Cksi
         # Calculate coolant convective coefficient
         hc = Nu*kap/Dh
+        print("Nu = ", Nu, ", kap = ", kap, ", Dh = ", Dh)
         
         # Incorporate heat transfer fin effectiveness into hc (Heat Transfer coefficient for hot gases)
         m = np.sqrt(2*hc*tRib/kChamber)
@@ -257,9 +258,13 @@ for i in range(1,len(xVals)):
         # Calculate heat flux
         q = (Taw-T+qRad/hg) / (1/hg + tChamber/kChamber + 1/hc)
 
+        effk = 1 / (1 / hg + tChamber / kChamber + 1 / hc)
+        print("effective heat coeff = ", effk, ", q  = ", q, ", Taw = ", Taw, ", hg = ", hg, ", kChamber/tChamber = ", kChamber/tChamber, ", hc = ", hc)
+
 
         # Calculate hot gas wall temperature and channel wall temperature    
         TwNew = Taw-(q-qRad)/hg
+        print("q, QRad: ", q, qRad)
         TwChannelNew = T+q/hc
         # These get fed back into top at beginning of While loop.
         

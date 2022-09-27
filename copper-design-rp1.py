@@ -32,7 +32,7 @@ s_yield = 120932000  # Yield strength
 
 
 NChannels = 30  # Number of channels
-tRib = 1.5e-3  # Thickness of Rib
+tRib = 1.0e-3  # Thickness of Rib
 channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm  # THIS SETTING IS NOT USED IN THIS CODE. IT IS OVERWRITTEN
 roughness = 6e-6  # Not sure what this is, but assume it is right.
 
@@ -70,7 +70,7 @@ def interpol(x, y, xNew, how="linear"):
 # CHANNEL HEIGHT DIMENSIONS AT VARIOUS STATIONS
 # It only allows for varying heights, not varying widths. I think we should allow for varying widths.
 xHeight = np.array([0, 9, 11, 13, 15, 16, 18, 20, 30]) * 1e-2
-Height = np.array([1.5, 1.5, 2.0, 2.3, 3.0, 4.0, 3, 2.5, 1.5]) * 1e-3
+Height = np.array([1.5, 1.5, 2.0, 2.3, 3.0, 4.0, 3, 2.5, 2.5]) * 1e-3
 
 # Check for inward buckling (due to coolant pressure)
 l = max(xVals)
@@ -166,7 +166,7 @@ for i in range(1, len(xVals)):
     # COOLANT: Calculate density and flow velocity
     rho = rp1.getDensity(p, T)
     V = fFlow / (A * rho)
-    print("Area = ", A, ", Density = ", rho, ", Flow Velocity at ", xVals[-i], " is ", V)
+    print("channelWidth = ", channelWidth, ", ChannelHeight = ", channelHeight, ", Area = ", A, ", Density = ", rho, ", Flow Velocity at ", xVals[-i], " is ", V)
 
     # COOLANT: Calculate/update static pressure and temperature
     dynPres2 = 0.5 * rho * V ** 2
@@ -242,9 +242,11 @@ for i in range(1, len(xVals)):
         # rhow = methane.eqState(p,TwChannel)
         # Nu = th.Ruan(Re,Pr,rho,rhow,Dh,x)
         # Apply correction to Nusselt number
-        Nu = Nu * Ci * Cksi
+        # Nu = Nu * Ci * Cksi
         # Calculate coolant convective coefficient
-        hc = Nu * kap / Dh
+        hc =15 * Nu * kap / Dh
+        print("hc = ", hc, ", Nu = ", Nu, ", kap = ", kap, ", Dh = ", Dh)
+        #joe
 
         # Incorporate heat transfer fin effectiveness into hc (Heat Transfer coefficient for hot gases)
         m = np.sqrt(2 * hc * tRib / kChamber)
@@ -255,10 +257,13 @@ for i in range(1, len(xVals)):
         qW = 5.74 * (pWater / 1e5 * Rnozzle) ** 0.3 * (Taw / 100) ** 3.5  # Water
         qC = 4 * (pCarbDiox / 1e5 * Rnozzle) ** 0.3 * (Taw / 100) ** 3.5  # Carbon Dioxide
         qRad = qW + qC
+        qRad = 0
 
         # Calculate heat flux
         q = (Taw - T + qRad / hg) / (1 / hg + tChamber / kChamber + 1 / hc)
-        print("QRad: ", qRad)
+
+        effk = 1 / (1 / hg + tChamber / kChamber + 1 / hc)
+        print("effective heat coeff = ", effk, ", q  = ", q, ", Taw = ", Taw, ", hg = ", hg, ", kChamber/tChamber = ", kChamber/tChamber, ", hc = ", hc)
 
         # Calculate hot gas wall temperature and channel wall temperature
         TwNew = Taw - (q - qRad) / hg
