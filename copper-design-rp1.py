@@ -32,7 +32,7 @@ s_yield = 120932000  # Yield strength
 
 
 NChannels = 30  # Number of channels
-tRib = 1.0e-3  # Thickness of Rib
+tRib = 2.0e-3  # Thickness of Rib
 channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm  # THIS SETTING IS NOT USED IN THIS CODE. IT IS OVERWRITTEN
 roughness = 6e-6  # Not sure what this is, but assume it is right.
 
@@ -71,9 +71,9 @@ def interpol(x, y, xNew, how="linear"):
 # It only allows for varying heights, not varying widths. I think we should allow for varying widths.
 #joe
 xHeight = np.array([0, 9, 11, 13, 15, 16, 18, 20, 30]) * 1e-2
-# Height = np.array([1.5, 1.5, 2.0, 2.3, 3.0, 4.0, 3, 2.5, 2.5]) * 1e-3
+Height = np.array([1.5, 1.5, 2.0, 2.3, 3.0, 4.0, 3, 2.5, 2.5]) * 1e-3
 # Height = np.array([3.5, 3.5, 4.0, 4.3, 5.0, 6.0, 5, 4.5, 4.5]) * 1e-3
-Height   = np.array([1,   1,   1.3, 2.0, 2.6, 3.0, 3, 2.0, 1.5]) * 1e-3
+# Height   = np.array([1,   1,   1.3, 2.0, 2.6, 3.0, 3, 2.0, 1.5]) * 1e-3
 
 # Check for inward buckling (due to coolant pressure)
 l = max(xVals)
@@ -171,7 +171,7 @@ for i in range(1, len(xVals)):
     # COOLANT: Calculate density and flow velocity
     rho = rp1.getDensity(p, T)
     V = fFlow / (A * rho)
-    print("channelWidth = ", channelWidth, ", ChannelHeight = ", channelHeight, ", Area = ", A, ", Density = ", rho, ", Flow Velocity at ", xVals[-i], " is ", V)
+    # print("channelWidth = ", channelWidth, ", ChannelHeight = ", channelHeight, ", Area = ", A, ", Density = ", rho, ", Flow Velocity at ", xVals[-i], " is ", V)
 
     # COOLANT: Calculate/update static pressure and temperature
     dynPres2 = 0.5 * rho * V ** 2
@@ -229,8 +229,7 @@ for i in range(1, len(xVals)):
     mug = CEA.interpol(aRatio, AreaCEA, CEAval_curr, muCEA)
     Taw = th.adiabatic_wall(Tg, gg, Mg, Prg)
 
-    print("Tg ====== ", Tg)
-    print("Taw = ", Taw)
+    # print("Taw = ", Taw)
 
     # HOT GASES: Increase TwNew to avoid missing loop
     TwNew = Tw + 10
@@ -265,7 +264,7 @@ for i in range(1, len(xVals)):
         # Calculate new hc.
         hcboost = (channelWidth + finEffectiveness * 2 * channelHeight) / (channelWidth + tRib)
         hc = hc * (channelWidth + finEffectiveness * 2 * channelHeight) / (channelWidth + tRib)
-        print(" - hc = ", hc, ", Nu = ", Nu, ", RE = ", Re, ", Pr = ", Pr, ", kap = ", kap, ", Dh = ", Dh, ", FinEffectiveness = ", finEffectiveness, ", hcboost = ", hcboost)
+        # print(" - hc = ", hc, ", Nu = ", Nu, ", RE = ", Re, ", Pr = ", Pr, ", kap = ", kap, ", Dh = ", Dh, ", FinEffectiveness = ", finEffectiveness, ", hcboost = ", hcboost)
 
         # Calculate radiative heat transfer (Suspect this is for the MAIN products of combustion)
         qW = 5.74 * (pWater / 1e5 * Rnozzle) ** 0.3 * (Taw / 100) ** 3.5  # Water
@@ -277,17 +276,20 @@ for i in range(1, len(xVals)):
         q = (Taw - T + qRad / hg) / (1 / hg + tChamber / kChamber + 1 / hc)
 
         effk = 1 / (1 / hg + tChamber / kChamber + 1 / hc)
-        print("effective heat coeff = ", effk, ", q  = ", q, ", Taw = ", Taw, ", hg = ", hg, ", kChamber/tChamber = ", kChamber/tChamber, ", hc = ", hc)
+        # print("effective heat coeff = ", effk, ", q  = ", q, ", Taw = ", Taw, ", hg = ", hg, ", kChamber/tChamber = ", kChamber/tChamber, ", hc = ", hc)
 
         # Calculate hot gas wall temperature and channel wall temperature
         TwNew = Taw - (q - qRad) / hg
         TwChannelNew = T + q / hc
         # These get fed back into top at beginning of While loop.
-        print("Comparing TwNew: ", TwNew , " with Tw: ", Tw)
-        print("Comparing TwChannelNew ", TwChannelNew , " with TwChannel: ", TwChannel)
+        # print("Comparing TwNew: ", TwNew , " with Tw: ", Tw)
+        # print("Comparing TwChannelNew ", TwChannelNew , " with TwChannel: ", TwChannel)
 
     Tw = TwNew
     TwChannel = TwChannelNew
+
+
+    print("Wall Temperature: ", Tw, ", Channel Wall Temp: ", TwChannel)
 
     # Calculate change in temperature and pressure
     A_heat = 2 * np.pi * Rnozzle * l  # Area of station being considered
