@@ -181,8 +181,11 @@ for i in range(1,len(xVals)):
     kap = methane.conductivity(rho,T)
 
     # COOLANT:  Calculate bulk flow properties of coolant
+    # mu is Dynamic viscosity
     Re = V*rho*Dh/mu
     Pr = mu*cp/kap
+
+    print("V,rho,Dh,mu = ", V, rho, Dh, mu)
     
     # COOLANT RELATED: Correct for curvature of channel alongside nozzle    
     if i>1 and i<len(xVals):
@@ -221,6 +224,9 @@ for i in range(1,len(xVals)):
     mug = CEA.interpol(aRatio,AreaCEA,CEAval_curr,muCEA)    
     Taw = th.adiabatic_wall(Tg,gg,Mg,Prg)
     
+    print("Tg ====== ", Tg)
+    print("Taw = ", Taw)
+
     # HOT GASES: Increase TwNew to avoid missing loop
     TwNew = Tw+10
     TwChannelNew = TwChannel+10
@@ -243,7 +249,7 @@ for i in range(1,len(xVals)):
         Nu = Nu*Ci*Cksi
         # Calculate coolant convective coefficient
         hc = Nu*kap/Dh
-        print("Nu = ", Nu, ", kap = ", kap, ", Dh = ", Dh)
+#        print("Nu = ", Nu, ", kap = ", kap, ", Dh = ", Dh)
         
         # Incorporate heat transfer fin effectiveness into hc (Heat Transfer coefficient for hot gases)
         m = np.sqrt(2*hc*tRib/kChamber)
@@ -260,6 +266,8 @@ for i in range(1,len(xVals)):
 
         effk = 1 / (1 / hg + tChamber / kChamber + 1 / hc)
         print("effective heat coeff = ", effk, ", q  = ", q, ", Taw = ", Taw, ", hg = ", hg, ", kChamber/tChamber = ", kChamber/tChamber, ", hc = ", hc)
+        print(" - hc = ", hc, ", Nu = ", Nu, ", RE = ", Re, ", Pr = ", Pr, ", kap = ", kap, ", Dh = ", Dh, ", FinEffectiveness = ", finEffectiveness)
+
 
 
         # Calculate hot gas wall temperature and channel wall temperature    
@@ -267,6 +275,9 @@ for i in range(1,len(xVals)):
         print("q, QRad: ", q, qRad)
         TwChannelNew = T+q/hc
         # These get fed back into top at beginning of While loop.
+        print("Comparing TwNew: ", TwNew , " with Tw: ", Tw)
+        print("Comparing TwChannelNew ", TwChannelNew , " with TwChannel: ", TwChannel)
+
         
     Tw = TwNew
     TwChannel = TwChannelNew

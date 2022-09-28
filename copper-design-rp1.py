@@ -69,8 +69,11 @@ def interpol(x, y, xNew, how="linear"):
 
 # CHANNEL HEIGHT DIMENSIONS AT VARIOUS STATIONS
 # It only allows for varying heights, not varying widths. I think we should allow for varying widths.
+#joe
 xHeight = np.array([0, 9, 11, 13, 15, 16, 18, 20, 30]) * 1e-2
-Height = np.array([1.5, 1.5, 2.0, 2.3, 3.0, 4.0, 3, 2.5, 2.5]) * 1e-3
+# Height = np.array([1.5, 1.5, 2.0, 2.3, 3.0, 4.0, 3, 2.5, 2.5]) * 1e-3
+# Height = np.array([3.5, 3.5, 4.0, 4.3, 5.0, 6.0, 5, 4.5, 4.5]) * 1e-3
+Height   = np.array([1,   1,   1.3, 2.0, 2.6, 3.0, 3, 2.0, 1.5]) * 1e-3
 
 # Check for inward buckling (due to coolant pressure)
 l = max(xVals)
@@ -159,7 +162,9 @@ for i in range(1, len(xVals)):
         Dh = th.Dh_rect(channelWidth, channelHeight)
 
     # COOLANT: Calculate dynamic pressure and temperature at previous station
-    print("Old V = ", V)
+    print("")
+    print("")
+    print("")
     dynPres1 = 0.5 * rho * V ** 2
     dynTemp1 = 0.5 * V ** 2 / cp
 
@@ -177,13 +182,14 @@ for i in range(1, len(xVals)):
     print("p, T = ", p, T)
     # COOLANT: Calculate thermodynamic properties of methane at current (rho,T)
 
-    mu = rp1.getViscoity(p, T)
+    mu = rp1.getViscoity(p, T) * rho / 1000000
     cp = rp1.getCp()
     kap = rp1.getConductivity(p, T)
 
     # COOLANT:  Calculate bulk flow properties of coolant
     Re = V * rho * Dh / mu
     Pr = mu * cp / kap
+    print("V,rho,Dh,mu = ", V, rho, Dh, mu)
 
     # COOLANT RELATED: Correct for curvature of channel alongside nozzle
     if i > 1 and i < len(xVals):
@@ -223,6 +229,9 @@ for i in range(1, len(xVals)):
     mug = CEA.interpol(aRatio, AreaCEA, CEAval_curr, muCEA)
     Taw = th.adiabatic_wall(Tg, gg, Mg, Prg)
 
+    print("Tg ====== ", Tg)
+    print("Taw = ", Taw)
+
     # HOT GASES: Increase TwNew to avoid missing loop
     TwNew = Tw + 10
     TwChannelNew = TwChannel + 10
@@ -244,14 +253,19 @@ for i in range(1, len(xVals)):
         # Apply correction to Nusselt number
         # Nu = Nu * Ci * Cksi
         # Calculate coolant convective coefficient
-        hc =15 * Nu * kap / Dh
-        print("hc = ", hc, ", Nu = ", Nu, ", kap = ", kap, ", Dh = ", Dh)
+        hc = Nu * kap / Dh
         #joe
 
         # Incorporate heat transfer fin effectiveness into hc (Heat Transfer coefficient for hot gases)
         m = np.sqrt(2 * hc * tRib / kChamber)
+
+        # Calculate finEffectiveness, a number between 0 and 1 We want as close as possible.
         finEffectiveness = np.tanh(m / tRib * channelHeight) / (m / tRib * channelHeight)
+
+        # Calculate new hc.
+        hcboost = (channelWidth + finEffectiveness * 2 * channelHeight) / (channelWidth + tRib)
         hc = hc * (channelWidth + finEffectiveness * 2 * channelHeight) / (channelWidth + tRib)
+        print(" - hc = ", hc, ", Nu = ", Nu, ", RE = ", Re, ", Pr = ", Pr, ", kap = ", kap, ", Dh = ", Dh, ", FinEffectiveness = ", finEffectiveness, ", hcboost = ", hcboost)
 
         # Calculate radiative heat transfer (Suspect this is for the MAIN products of combustion)
         qW = 5.74 * (pWater / 1e5 * Rnozzle) ** 0.3 * (Taw / 100) ** 3.5  # Water
@@ -269,6 +283,8 @@ for i in range(1, len(xVals)):
         TwNew = Taw - (q - qRad) / hg
         TwChannelNew = T + q / hc
         # These get fed back into top at beginning of While loop.
+        print("Comparing TwNew: ", TwNew , " with Tw: ", Tw)
+        print("Comparing TwChannelNew ", TwChannelNew , " with TwChannel: ", TwChannel)
 
     Tw = TwNew
     TwChannel = TwChannelNew
