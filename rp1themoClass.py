@@ -35,6 +35,19 @@ def interpol(Tv, param, Tf):
 
 
 #
+# Generated with help from: -
+#  https://www.nuclear-power.com/nuclear-engineering/heat-transfer/convection-convective-heat-transfer/gnielinski-equation/
+#
+def gnielinski(Re, Pr, Dh, f):
+    if Re < 3000 or Re > 5000000:
+        print("Warning: Reynolds number (", Re, ") is outside the valid range of 3000 ... 5000000. Best to assess suitability of Gnielinski correlation for this job.")
+    if Pr < 0.5 or Pr > 2000:
+        print("Warning: Prandtl number (", Pr, ") is outside the valid range of 0.5 to 2000. Best to assess suitability of Gnielinski correlation for this job.")
+    return  (f/8) * (Re - 1000) * Pr/(1 + 12.7*(f/8)**0.5 * (Pr**0.6666 - 1))
+
+
+
+#
 # See https://www.thermal-engineering.org/what-is-dittus-boelter-equation-definition/  for some details
 #
 #
@@ -67,6 +80,8 @@ def colebrook(Dh, roughness, Re, f):
 
 
 def frictionFactor(Dh, roughness, Re):
+    if Re < 4000:
+       print("Warning: Reynolds number (", Re, ") is below the minimum suggested value of 4000. Best to assess suitability of frictionFactor correlation for this job.")
     guess = 1e-5
     for i in range(5):
         guess = colebrook(Dh, roughness, Re, guess)
@@ -79,7 +94,7 @@ def frictionFactor(Dh, roughness, Re):
 #
 def frictionFactorLaminar(Re):
     if Re > 2300:
-        print("Warning: Reynolds number (", Re, ") is outside the valid range of 0.0 ... 2300. Best to assess suitability of dittusBoelter correlation for this job.")
+        print("Warning: Reynolds number (", Re, ") is outside the valid range of 0.0 ... 2300. Best to assess suitability of dittusBoelter correlation for this job...")
     return 64 / Re
 
 

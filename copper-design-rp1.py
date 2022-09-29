@@ -32,7 +32,7 @@ s_yield = 120932000  # Yield strength
 
 
 NChannels = 30  # Number of channels
-tRib = 2.0e-3  # Thickness of Rib
+tRib = 1.5e-3  # Thickness of Rib
 channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm  # THIS SETTING IS NOT USED IN THIS CODE. IT IS OVERWRITTEN
 roughness = 6e-6  # Not sure what this is, but assume it is right.
 
@@ -71,7 +71,8 @@ def interpol(x, y, xNew, how="linear"):
 # It only allows for varying heights, not varying widths. I think we should allow for varying widths.
 #joe
 xHeight = np.array([0, 9, 11, 13, 15, 16, 18, 20, 30]) * 1e-2
-Height = np.array([1.5, 1.5, 2.0, 2.3, 3.0, 4.0, 3, 2.5, 2.5]) * 1e-3
+# Height = np.array([1.5, 1.5, 2.0, 2.3, 3.0, 4.0, 3, 2.5, 2.5]) * 1e-3
+Height = np.array([1.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
 # Height = np.array([3.5, 3.5, 4.0, 4.3, 5.0, 6.0, 5, 4.5, 4.5]) * 1e-3
 # Height   = np.array([1,   1,   1.3, 2.0, 2.6, 3.0, 3, 2.0, 1.5]) * 1e-3
 
@@ -161,6 +162,9 @@ for i in range(1, len(xVals)):
         A = NChannels * channelWidth * channelHeight
         Dh = th.Dh_rect(channelWidth, channelHeight)
 
+
+    print("Rnozzle = ", Rnozzle, ", NChannels = ", NChannels, ", tRib = ", tRib)
+
     # COOLANT: Calculate dynamic pressure and temperature at previous station
     print("")
     print("")
@@ -171,12 +175,15 @@ for i in range(1, len(xVals)):
     # COOLANT: Calculate density and flow velocity
     rho = rp1.getDensity(p, T)
     V = fFlow / (A * rho)
-    # print("channelWidth = ", channelWidth, ", ChannelHeight = ", channelHeight, ", Area = ", A, ", Density = ", rho, ", Flow Velocity at ", xVals[-i], " is ", V)
+    print("fflow = ", fFlow, ", channelWidth = ", channelWidth, ", ChannelHeight = ", channelHeight, ", Area = ", A, ", Density = ", rho, ", Flow Velocity at ", xVals[-i], " is ", V)
 
     # COOLANT: Calculate/update static pressure and temperature
     dynPres2 = 0.5 * rho * V ** 2
     p = p - (dynPres2 - dynPres1)
     dynTemp2 = 0.5 * V ** 2 / cp
+
+    print("At x: ", x, " pressure diff: ", dynPres2 - dynPres1)
+    
 
     T = T - (dynTemp2 - dynTemp1)
     print("p, T = ", p, T)
@@ -246,7 +253,13 @@ for i in range(1, len(xVals)):
         # COOLANT
         # Calculate Nusselt number
         # Nu = th.Taylor(Re, Pr, T, TwChannel, Dh, x)
-        Nu = th.dittusBoelter(Re,Pr)
+        # Nu = th.dittusBoelter(Re,Pr)
+        f = th.frictionFactor(Dh, roughness, Re)
+        # print("FrictionnFactor = ", f)
+
+        Nu = th.gnielinski(Re, Pr, Dh, f)
+        Nu = Nu * 0.5
+
         # rhow = methane.eqState(p,TwChannel)
         # Nu = th.Ruan(Re,Pr,rho,rhow,Dh,x)
         # Apply correction to Nusselt number
@@ -289,7 +302,7 @@ for i in range(1, len(xVals)):
     TwChannel = TwChannelNew
 
 
-    print("Wall Temperature: ", Tw, ", Channel Wall Temp: ", TwChannel)
+    print("Nu = ", Nu, ", Wall Temperature: ", Tw, ", Channel Wall Temp: ", TwChannel, ", Coolant Temp: ", T, ", q: ", q)
 
     # Calculate change in temperature and pressure
     A_heat = 2 * np.pi * Rnozzle * l  # Area of station being considered
@@ -297,7 +310,13 @@ for i in range(1, len(xVals)):
     # deltap = th.frictionFactor(Dh, roughness, Re) * l / Dh * rho * V ** 2 / 2.0  # Change in pressure of coolant
 
     # We expect flow to be mostly laminar, so we use frictionFactorLaminar to calculate the frictionfactor coefficient.
-    deltap = th.frictionFactorLaminar(Re) * l / Dh * rho * V ** 2 / 2.0  # Change in pressure of coolant
+    # deltap = th.frictionFactorLaminar(Re) * l / Dh * rho * V ** 2 / 2.0  # Change in pressure of coolant
+    deltap = f * l / Dh * rho * V ** 2 / 2.0  # Change in pressure of coolant
+    print(deltap, p, f, l, Dh, rho, V)
+
+
+
+
     Q = Q + q * A_heat  # Change in enthalpy of coolant
     Atot = Atot + A_heat  # NOT SURE WHAT THIS IS...
     mCur = (2 * np.pi * Rnozzle * l * tChamber + l * tRib * channelHeight * NChannels) * rhoChamber  # ?? change in ??
@@ -344,7 +363,7 @@ print(mTot, "kg chamber mass")
 # Create figure
 fig = plt.figure(1)
 fig.clf()
-fig.set_size_inches(15 / 2.54, 6 / 2.54)
+fig.set_size_inches(15 / 2.54, 9 / 2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
@@ -372,7 +391,7 @@ ax.legend(lines, labs, loc=6, labelspacing=0)
 ax.set_xlabel(r"$x$ coordinate [cm]")
 ax.set_ylabel(r"Temperature [K]")
 ax2.set_ylabel(r"$d_c$ [mm]; $q$ [$\mathrm{10^7 W/m^2}$]; Radius [10 cm]")
-ax.set_ylim([400, 800])
+ax.set_ylim([400, 2100])
 ax2.set_ylim([0, 4])
 ax.grid()
 plt.show()
@@ -380,7 +399,7 @@ plt.show()
 # Create figure
 fig = plt.figure(2)
 fig.clf()
-fig.set_size_inches(15 / 2.54, 6 / 2.54)
+fig.set_size_inches(15 / 2.54, 9 / 2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
@@ -414,7 +433,7 @@ plt.show()
 # Create figure
 fig = plt.figure(3)
 fig.clf()
-fig.set_size_inches(15 / 2.54, 6 / 2.54)
+fig.set_size_inches(15 / 2.54, 9 / 2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
@@ -444,7 +463,7 @@ plt.show()
 # Create figure
 fig = plt.figure(4)
 fig.clf()
-fig.set_size_inches(15 / 2.54, 6 / 2.54)
+fig.set_size_inches(15 / 2.54, 9 / 2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
