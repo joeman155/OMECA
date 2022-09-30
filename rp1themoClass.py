@@ -305,6 +305,10 @@ class rp1thermo:
             previous_temp = float(temp)
             idx = idx + 1
 
+        if upper_temp == 0 and temperature < float(temp):
+           upper_temp = float(temp)
+           print("setting upper_temp to ", upper_temp)
+
         if lower_temp > 0 and upper_temp > 0:
             # Lower Temp side
             pressures = list(self.cond_k[lower_idx].keys())
