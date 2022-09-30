@@ -72,7 +72,9 @@ def interpol(x, y, xNew, how="linear"):
 #joe
 xHeight = np.array([0, 9, 11, 13, 15, 16, 18, 20, 30]) * 1e-2
 # Height = np.array([1.5, 1.5, 2.0, 2.3, 3.0, 4.0, 3, 2.5, 2.5]) * 1e-3
-Height = np.array([1.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
+# Height = np.array([1.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
+# Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
+Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.2]) * 1e-3
 # Height = np.array([3.5, 3.5, 4.0, 4.3, 5.0, 6.0, 5, 4.5, 4.5]) * 1e-3
 # Height   = np.array([1,   1,   1.3, 2.0, 2.6, 3.0, 3, 2.0, 1.5]) * 1e-3
 
@@ -258,7 +260,7 @@ for i in range(1, len(xVals)):
         # print("FrictionnFactor = ", f)
 
         Nu = th.gnielinski(Re, Pr, Dh, f)
-        Nu = Nu * 0.5
+        Nu = Nu * 0.65   #joe
 
         # rhow = methane.eqState(p,TwChannel)
         # Nu = th.Ruan(Re,Pr,rho,rhow,Dh,x)
@@ -266,7 +268,6 @@ for i in range(1, len(xVals)):
         # Nu = Nu * Ci * Cksi
         # Calculate coolant convective coefficient
         hc = Nu * kap / Dh
-        #joe
 
         # Incorporate heat transfer fin effectiveness into hc (Heat Transfer coefficient for hot gases)
         m = np.sqrt(2 * hc * tRib / kChamber)
@@ -363,7 +364,7 @@ print(mTot, "kg chamber mass")
 # Create figure
 fig = plt.figure(1)
 fig.clf()
-fig.set_size_inches(15 / 2.54, 9 / 2.54)
+fig.set_size_inches(36 / 2.54, 15 / 2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
@@ -396,14 +397,17 @@ ax2.set_ylim([0, 4])
 ax.grid()
 plt.show()
 
+
+
+
 # Create figure
 fig = plt.figure(2)
 fig.clf()
-fig.set_size_inches(15 / 2.54, 9 / 2.54)
+fig.set_size_inches(36 / 2.54, 15 / 2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
-lins = range(3)
+lins = list(range(3))
 
 # Reynolds number
 lins[0] = ax.plot(xVals[1:] * 100, np.array(Revals[::-1]) / 1e4, 'r--', lw=2, label=r'Re')
@@ -433,11 +437,11 @@ plt.show()
 # Create figure
 fig = plt.figure(3)
 fig.clf()
-fig.set_size_inches(15 / 2.54, 9 / 2.54)
+fig.set_size_inches(36 / 2.54, 15 / 2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
-lins = range(2)
+lins = list(range(2))
 
 # Pressure
 lins[0] = ax.plot(xVals[1:] * 100, np.array(p0vals[::-1]) / 1e5, 'b--', lw=2, label=r'$p_0$')
@@ -463,11 +467,11 @@ plt.show()
 # Create figure
 fig = plt.figure(4)
 fig.clf()
-fig.set_size_inches(15 / 2.54, 9 / 2.54)
+fig.set_size_inches(36 / 2.54, 15 / 2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
-lins = range(1)
+lins = list(range(1))
 
 # Pressure
 lins[0] = ax.plot(xVals * 100, yVals * 100, 'k-', label=r'Contour')
