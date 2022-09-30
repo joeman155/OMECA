@@ -69,14 +69,16 @@ def interpol(x, y, xNew, how="linear"):
 
 # CHANNEL HEIGHT DIMENSIONS AT VARIOUS STATIONS
 # It only allows for varying heights, not varying widths. I think we should allow for varying widths.
-#joe
 xHeight = np.array([0, 9, 11, 13, 15, 16, 18, 20, 30]) * 1e-2
 # Height = np.array([1.5, 1.5, 2.0, 2.3, 3.0, 4.0, 3, 2.5, 2.5]) * 1e-3
 # Height = np.array([1.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
 # Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
-Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.2]) * 1e-3
+# Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.2]) * 1e-3
+Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]) * 1e-3
+# Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.2, 1.5]) * 1e-3
 # Height = np.array([3.5, 3.5, 4.0, 4.3, 5.0, 6.0, 5, 4.5, 4.5]) * 1e-3
 # Height   = np.array([1,   1,   1.3, 2.0, 2.6, 3.0, 3, 2.0, 1.5]) * 1e-3
+#joe
 
 # Check for inward buckling (due to coolant pressure)
 l = max(xVals)
@@ -113,6 +115,7 @@ pvals = []
 Tvals = []
 p0vals = []
 T0vals = []
+V0vals = []
 rhovals = []
 Twvals = []
 hcvals = []
@@ -331,6 +334,7 @@ for i in range(1, len(xVals)):
 
     p0vals.append(p + 0.5 * rho * V ** 2)
     T0vals.append(T + 0.5 * V ** 2 / cp)
+    V0vals.append(V)
 
     # Store parameters in lists
     pvals.append(p)
@@ -430,7 +434,7 @@ ax.set_xlabel(r"$x$ coordinate [cm]")
 ax.set_ylabel(r"Radius [cm]; Re [$\mathrm{10^4}$]")
 ax2.set_ylabel(r"Nu [-]")
 ax.set_ylim([0, 80])
-ax2.set_ylim([0, 200])
+ax2.set_ylim([0, 150])
 ax.grid()
 plt.show()
 
@@ -441,14 +445,15 @@ fig.set_size_inches(36 / 2.54, 15 / 2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
-lins = list(range(2))
+lins = list(range(3))
 
 # Pressure
 lins[0] = ax.plot(xVals[1:] * 100, np.array(p0vals[::-1]) / 1e5, 'b--', lw=2, label=r'$p_0$')
+lins[1] = ax.plot(xVals[1:] * 100, V0vals[::-1], 'b:', lw=2, label=r'$V_0$')
 
 # Temperature
 ax2 = ax.twinx()
-lins[1] = ax2.plot(xVals[1:] * 100, T0vals[::-1], 'r-.', lw=2, label=r'$T_0$')
+lins[2] = ax2.plot(xVals[1:] * 100, T0vals[::-1], 'r-.', lw=2, label=r'$T_0$')
 
 # Create legend
 labs = [line[0].get_label() for line in lins]
@@ -457,10 +462,10 @@ ax.legend(lines, labs, loc=7, labelspacing=0)
 
 # Create labels, show and save
 ax.set_xlabel(r"$x$ coordinate [cm]")
-ax.set_ylabel(r"$p_{0,c,b}$ [bar]")
+ax.set_ylabel(r"$p_{0,c,b}$ [bar]; Velocity [m^-1]")
 ax2.set_ylabel(r"$T_{0,c,b}$ [K]")
-ax.set_ylim([53, 61])
-ax2.set_ylim([100, 800])
+ax.set_ylim([00, 61])
+ax2.set_ylim([000, 1000])
 ax.grid()
 plt.show()
 
