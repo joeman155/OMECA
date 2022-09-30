@@ -237,6 +237,7 @@ class rp1thermo:
                     idx = idx + 1
                     temp = float(values[2])  # Adopt first temp as "index" (close enough)
                     temps = np.append(temps, temp)
+                    print("TEMP: ", temp)
                     k.append(data)
                     data = {}
             else:
@@ -248,6 +249,7 @@ class rp1thermo:
             # lnum = col (PRESSURE)
             data[float(values[3])] = float(values[5])
             # print(data)
+            # print("TEMP: ", float(values[3]))
             lnum = lnum + 1
             index_prefix = values[0][0]
 
@@ -290,12 +292,15 @@ class rp1thermo:
         upper_idx = 0
         idx = 0
         for temp in self.cond_temps:
+            print("Comparing Temperature: ", temperature, " with temp: ", temp)
             if temperature < float(temp) and lower_temp > 0:
                 upper_temp = previous_temp
+                print("setting upper_temp to ", upper_temp)
                 upper_idx = idx - 1
                 break
             if temperature < float(temp) and lower_temp == 0:
                 lower_temp = float(previous_temp)
+                print("setting lower_temp to ", lower_temp)
                 lower_idx = idx - 1
             previous_temp = float(temp)
             idx = idx + 1
@@ -329,5 +334,5 @@ class rp1thermo:
             return kval
 
         else:
-            print("Unable to get temperature bounded")
+            print("Unable to get temperature, ", lower_temp, upper_temp,",  bounded")
             return

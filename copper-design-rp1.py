@@ -31,8 +31,8 @@ s_yield = 120932000  # Yield strength
 # I am sure this geometry changes.
 
 
-NChannels = 30  # Number of channels
-tRib = 1.5e-3  # Thickness of Rib
+NChannels = 40  # Number of channels
+tRib = 1.2e-3  # Thickness of Rib
 channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm  # THIS SETTING IS NOT USED IN THIS CODE. IT IS OVERWRITTEN
 roughness = 6e-6  # Not sure what this is, but assume it is right.
 
@@ -263,7 +263,7 @@ for i in range(1, len(xVals)):
         # print("FrictionnFactor = ", f)
 
         Nu = th.gnielinski(Re, Pr, Dh, f)
-        Nu = Nu * 0.65   #joe
+        Nu = Nu * 1   #joe
 
         # rhow = methane.eqState(p,TwChannel)
         # Nu = th.Ruan(Re,Pr,rho,rhow,Dh,x)
@@ -464,7 +464,7 @@ ax.legend(lines, labs, loc=7, labelspacing=0)
 ax.set_xlabel(r"$x$ coordinate [cm]")
 ax.set_ylabel(r"$p_{0,c,b}$ [bar]; Velocity [m^-1]")
 ax2.set_ylabel(r"$T_{0,c,b}$ [K]")
-ax.set_ylim([00, 61])
+ax.set_ylim([00, 75])
 ax2.set_ylim([000, 1000])
 ax.grid()
 plt.show()
