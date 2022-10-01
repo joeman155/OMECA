@@ -31,13 +31,13 @@ s_yield = 120932000  # Yield strength
 # I am sure this geometry changes.
 
 
-NChannels = 40  # Number of channels
+NChannels = 30  # Number of channels
 tRib = 1.2e-3  # Thickness of Rib
 channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm  # THIS SETTING IS NOT USED IN THIS CODE. IT IS OVERWRITTEN
 roughness = 6e-6  # Not sure what this is, but assume it is right.
 
 # Initialize coolant pressure and temperature
-p = pin = 60e5  # Pressure in Pascals
+p = pin = 50e5  # Pressure in Pascals
 T = Tin = 302  # Temperature of coolant at nozzle exit in Kelvin
 
 # Read nozzle coordinates
@@ -74,8 +74,8 @@ xHeight = np.array([0, 9, 11, 13, 15, 16, 18, 20, 30]) * 1e-2
 # Height = np.array([1.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
 # Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
 # Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.2]) * 1e-3
-# Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]) * 1e-3
-Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 1.5]) * 1e-3
+Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]) * 1e-3
+# Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 1.5]) * 1e-3
 # Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.2, 1.5]) * 1e-3
 # Height = np.array([3.5, 3.5, 4.0, 4.3, 5.0, 6.0, 5, 4.5, 4.5]) * 1e-3
 # Height   = np.array([1,   1,   1.3, 2.0, 2.6, 3.0, 3, 2.0, 1.5]) * 1e-3
@@ -169,30 +169,22 @@ for i in range(1, len(xVals)):
         Dh = th.Dh_rect(channelWidth, channelHeight)
 
 
-    print("Rnozzle = ", Rnozzle, ", NChannels = ", NChannels, ", tRib = ", tRib)
-
     # COOLANT: Calculate dynamic pressure and temperature at previous station
-    print("")
-    print("")
-    print("")
     dynPres1 = 0.5 * rho * V ** 2
     dynTemp1 = 0.5 * V ** 2 / cp
 
     # COOLANT: Calculate density and flow velocity
     rho = rp1.getDensity(p, T)
     V = fFlow / (A * rho)
-    print("fflow = ", fFlow, ", channelWidth = ", channelWidth, ", ChannelHeight = ", channelHeight, ", Area = ", A, ", Density = ", rho, ", Flow Velocity at ", xVals[-i], " is ", V)
 
     # COOLANT: Calculate/update static pressure and temperature
     dynPres2 = 0.5 * rho * V ** 2
     p = p - (dynPres2 - dynPres1)
     dynTemp2 = 0.5 * V ** 2 / cp
 
-    print("At x: ", x, " pressure diff: ", dynPres2 - dynPres1)
-    
+
 
     T = T - (dynTemp2 - dynTemp1)
-    print("p, T = ", p, T)
     # COOLANT: Calculate thermodynamic properties of methane at current (rho,T)
 
     mu = rp1.getViscoity(p, T) * rho / 1000000
@@ -202,7 +194,6 @@ for i in range(1, len(xVals)):
     # COOLANT:  Calculate bulk flow properties of coolant
     Re = V * rho * Dh / mu
     Pr = mu * cp / kap
-    print("V,rho,Dh,mu = ", V, rho, Dh, mu)
 
     # COOLANT RELATED: Correct for curvature of channel alongside nozzle
     if i > 1 and i < len(xVals):
@@ -242,7 +233,6 @@ for i in range(1, len(xVals)):
     mug = CEA.interpol(aRatio, AreaCEA, CEAval_curr, muCEA)
     Taw = th.adiabatic_wall(Tg, gg, Mg, Prg)
 
-    # print("Taw = ", Taw)
 
     # HOT GASES: Increase TwNew to avoid missing loop
     TwNew = Tw + 10
@@ -280,9 +270,8 @@ for i in range(1, len(xVals)):
         finEffectiveness = np.tanh(m / tRib * channelHeight) / (m / tRib * channelHeight)
 
         # Calculate new hc.
-        hcboost = (channelWidth + finEffectiveness * 2 * channelHeight) / (channelWidth + tRib)
         hc = hc * (channelWidth + finEffectiveness * 2 * channelHeight) / (channelWidth + tRib)
-        # print(" - hc = ", hc, ", Nu = ", Nu, ", RE = ", Re, ", Pr = ", Pr, ", kap = ", kap, ", Dh = ", Dh, ", FinEffectiveness = ", finEffectiveness, ", hcboost = ", hcboost)
+        hcboost = (channelWidth + finEffectiveness * 2 * channelHeight) / (channelWidth + tRib)
 
         # Calculate radiative heat transfer (Suspect this is for the MAIN products of combustion)
         qW = 5.74 * (pWater / 1e5 * Rnozzle) ** 0.3 * (Taw / 100) ** 3.5  # Water
@@ -307,7 +296,18 @@ for i in range(1, len(xVals)):
     TwChannel = TwChannelNew
 
 
-    print("Nu = ", Nu, ", Wall Temperature: ", Tw, ", Channel Wall Temp: ", TwChannel, ", Coolant Temp: ", T, ", q: ", q)
+    xx = np.round(xVals[-i] * 100, 2)
+    print("")
+    print("")
+    print("")
+    print("X POSITION: ", xx, " mm")
+    print("---------------------------------")
+    print("channelWidth = ", np.round(1000 * channelWidth, 2), ", ChannelHeight = ", np.round(1000 * channelHeight, 2), ", Area = ", np.round(1000000 * A, 2))
+    print("V,rho,Dh,mu = ", np.round(V, 2), np.round(rho, 0), np.round(Dh, 6), np.round(mu, 6))
+    print("Coolant Pressure, Temperature = ", np.round(p, 2), np.round(T, 1))
+    print("Heat Coefficients: hg = ", np.round(hg, 2), " - hc = ", np.round(hc, 2), ", Nu = ", np.round(Nu, 2), ", RE = ", np.round(Re,3), ", Pr = ", np.round(Pr, 3), ", kap = ", np.round(kap, 2), ", Dh = ", np.round(1000 * Dh, 2), ", FinEffectiveness = ", finEffectiveness, ", hcboost = ", hcboost)
+    print("Temperatures:  Wall(gas) Temperature: ", Tw, ", Channel Wall Temp: ", TwChannel)
+    print("Heat Flux: ", q)
 
     # Calculate change in temperature and pressure
     A_heat = 2 * np.pi * Rnozzle * l  # Area of station being considered
@@ -317,7 +317,6 @@ for i in range(1, len(xVals)):
     # We expect flow to be mostly laminar, so we use frictionFactorLaminar to calculate the frictionfactor coefficient.
     # deltap = th.frictionFactorLaminar(Re) * l / Dh * rho * V ** 2 / 2.0  # Change in pressure of coolant
     deltap = f * l / Dh * rho * V ** 2 / 2.0  # Change in pressure of coolant
-    print(deltap, p, f, l, Dh, rho, V)
 
 
 
@@ -329,7 +328,6 @@ for i in range(1, len(xVals)):
     # Update pressure, temperature and channel length
     p = p - deltap  # Update pressure of coolant
     fric = th.frictionFactor(Dh, roughness, Re)
-    # print("DELTAP, V, l, Dh, rho, fric, Re, roughness = ", deltap, V, l, Dh, rho, fric, Re, roughness)
     T = T + deltaT  # Update temperature of coolant
     x = x + l  # new X position.
 

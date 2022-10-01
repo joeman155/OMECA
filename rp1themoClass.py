@@ -79,13 +79,31 @@ def colebrook(Dh, roughness, Re, f):
     return 1 / (-2 * np.log10(roughness / (3.7 * Dh) + 2.51 / (Re * np.sqrt(f)))) ** 2
 
 
+
+
+#
+# Generic formula for friction
+#
 def frictionFactor(Dh, roughness, Re):
-    if Re < 4000:
-       print("Warning: Reynolds number (", Re, ") is below the minimum suggested value of 4000. Best to assess suitability of frictionFactor correlation for this job.")
+    if Re < 2300 and Re > 0:
+        return frictionFactorLaminar(Re)
+    elif Re >= 2300:
+        return frictionFactorTurbulent(Dh, roughness, Re)
+
+
+
+# For Turbulent flow, 
+#
+# This is only valid for turbulent flows
+#
+def frictionFactorTurbulent(Dh, roughness, Re):
+    if Re < 2300:
+       print("Warning: Reynolds number (", Re, ") is below the minimum suggested value of 2300. Best to assess suitability of frictionFactor correlation for this job.")
     guess = 1e-5
     for i in range(5):
         guess = colebrook(Dh, roughness, Re, guess)
     return guess
+
 
 
 # For Laminar flow, the frictionFactor is calulated using the correlation below.
@@ -292,22 +310,22 @@ class rp1thermo:
         upper_idx = 0
         idx = 0
         for temp in self.cond_temps:
-            print("Comparing Temperature: ", temperature, " with temp: ", temp)
+            # print("Comparing Temperature: ", temperature, " with temp: ", temp)
             if temperature < float(temp) and lower_temp > 0:
                 upper_temp = previous_temp
-                print("setting upper_temp to ", upper_temp)
+                # print("setting upper_temp to ", upper_temp)
                 upper_idx = idx - 1
                 break
             if temperature < float(temp) and lower_temp == 0:
                 lower_temp = float(previous_temp)
-                print("setting lower_temp to ", lower_temp)
+                # print("setting lower_temp to ", lower_temp)
                 lower_idx = idx - 1
             previous_temp = float(temp)
             idx = idx + 1
 
         if upper_temp == 0 and temperature < float(temp):
-           upper_temp = float(temp)
-           print("setting upper_temp to ", upper_temp)
+            upper_temp = float(temp)
+            # print("setting upper_temp to ", upper_temp)
 
         if lower_temp > 0 and upper_temp > 0:
             # Lower Temp side
