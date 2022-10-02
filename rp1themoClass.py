@@ -12,9 +12,18 @@ from scipy.interpolate import interp2d
 from scipy import interpolate
 
 
-def bartz(T0, Tw, p0, M, Dt, area, visc, cp, Pr, gamma, cstar):
+
+def bartz2(T0, Tw, p0, M, Dt, areaRatio, visc, cp, Pr, gamma, cstar, r):
+    g = 9.81
     s = (0.5 * Tw / T0 * (1 + (gamma - 1) / 2 * M ** 2) + 0.5) ** (-0.68) * (1 + (gamma - 1) / 2 * M ** 2) ** (-0.12)
-    h = 0.026 / Dt ** 0.2 * visc ** 0.2 * cp / Pr ** 0.6 * (p0 / cstar) ** 0.8 * (1.0 / area) ** 0.9 * s
+    # h = 41.8565 / Dt ** 0.2 * (visc ** 0.2 * cp / Pr ** 0.6) * (p0 * g / cstar) ** 0.8 * (Dt / r) ** 0.1 * (1 / areaRatio) ** 0.9 * s
+    h = 0.026 / Dt ** 0.2 * (visc ** 0.2 * cp / Pr ** 0.6) * (p0 / cstar) ** 0.8 * (Dt / r) ** 0.1 * (1 / areaRatio) ** 0.9 * s
+    return h
+
+
+def bartz(T0, Tw, p0, M, Dt, areaRatio, visc, cp, Pr, gamma, cstar):
+    s = (0.5 * Tw / T0 * (1 + (gamma - 1) / 2 * M ** 2) + 0.5) ** (-0.68) * (1 + (gamma - 1) / 2 * M ** 2) ** (-0.12)
+    h = 0.026 / Dt ** 0.2 * visc ** 0.2 * cp / Pr ** 0.6 * (p0 / cstar) ** 0.8 * (1.0 / areaRatio) ** 0.9 * s
     return h
 
 
@@ -255,7 +264,6 @@ class rp1thermo:
                     idx = idx + 1
                     temp = float(values[2])  # Adopt first temp as "index" (close enough)
                     temps = np.append(temps, temp)
-                    print("TEMP: ", temp)
                     k.append(data)
                     data = {}
             else:

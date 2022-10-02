@@ -74,7 +74,14 @@ xHeight = np.array([0, 9, 11, 13, 15, 16, 18, 20, 30]) * 1e-2
 # Height = np.array([1.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
 # Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
 # Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.2]) * 1e-3
+
+# Fairly level
 Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]) * 1e-3
+
+# big peak
+# Height = np.array([2.5, 2.5, 2.5, 2.5, 3.5, 2.5, 2.5, 2.5, 2.5]) * 1e-3
+
+
 # Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 1.5]) * 1e-3
 # Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.2, 1.5]) * 1e-3
 # Height = np.array([3.5, 3.5, 4.0, 4.3, 5.0, 6.0, 5, 4.5, 4.5]) * 1e-3
@@ -118,7 +125,9 @@ p0vals = []
 T0vals = []
 V0vals = []
 rhovals = []
+Tgvals = []
 Twvals = []
+Twchvals = []
 hcvals = []
 hgvals = []
 wvals = []
@@ -195,6 +204,7 @@ for i in range(1, len(xVals)):
     Re = V * rho * Dh / mu
     Pr = mu * cp / kap
 
+
     # COOLANT RELATED: Correct for curvature of channel alongside nozzle
     if i > 1 and i < len(xVals):
         (x1, y1) = (xVals[-i - 1], yVals[-i - 1])
@@ -244,7 +254,11 @@ for i in range(1, len(xVals)):
         # HOT GASES
         # Calculate convective coefficient using Bartz
         hg = th.bartz(T0, Tw, p0, Mg, rt * 2, aRatio, mug, cpg, Prg, gg, cstar)
-        hg = hg / 0.026 * 0.0195
+        # hgg = th.bartz2(T0, Tw, p0, Mg, rt * 2, aRatio, mug, cpg, Prg, gg, cstar, Rnozzle)
+        # print("Compare hg: ", hg , " with hgg: ", hgg)
+        # hg = hg / 0.026 * 0.0195
+        hg = hg * 1
+        
 
         # COOLANT
         # Calculate Nusselt number
@@ -306,7 +320,7 @@ for i in range(1, len(xVals)):
     print("V,rho,Dh,mu = ", np.round(V, 2), np.round(rho, 0), np.round(Dh, 6), np.round(mu, 6))
     print("Coolant Pressure, Temperature = ", np.round(p, 2), np.round(T, 1))
     print("Heat Coefficients: hg = ", np.round(hg, 2), " - hc = ", np.round(hc, 2), ", Nu = ", np.round(Nu, 2), ", RE = ", np.round(Re,3), ", Pr = ", np.round(Pr, 3), ", kap = ", np.round(kap, 2), ", Dh = ", np.round(1000 * Dh, 2), ", FinEffectiveness = ", finEffectiveness, ", hcboost = ", hcboost)
-    print("Temperatures:  Wall(gas) Temperature: ", Tw, ", Channel Wall Temp: ", TwChannel)
+    print("Temperatures:  Adbiatic Gas Temp: ", Taw, " Wall(gas) Temperature: ", Tw, ", Channel Wall Temp: ", TwChannel)
     print("Heat Flux: ", q)
 
     # Calculate change in temperature and pressure
@@ -339,7 +353,9 @@ for i in range(1, len(xVals)):
     pvals.append(p)
     Tvals.append(T)
     rhovals.append(rho)
+    Tgvals.append(Tg)
     Twvals.append(Tw)
+    Twchvals.append(TwChannel)
     Tawvals.append(Taw)
     hcvals.append(hc)
     hgvals.append(hg)
@@ -361,6 +377,10 @@ print((p0vals[0] - p0vals[-1]) / 1e5, "bar pressure loss.")
 print(T - Tvals[0], "K temperature rise")
 print(Q, "Total heat input")
 print(mTot, "kg chamber mass")
+
+
+
+
 # Plot results
 
 
@@ -371,20 +391,23 @@ fig.set_size_inches(36 / 2.54, 15 / 2.54)
 ax = fig.add_subplot(111)
 
 # Create four plots
-lins = list(range(4))
+lins = list(range(7))
 
 # Wall temperature
 lins[0] = ax.plot(xVals[1:] * 100, Twvals[::-1], 'g--', lw=2, label=r'$T_w$')
+lins[1] = ax.plot(xVals[1:] * 100, Twchvals[::-1], 'y--', lw=2, label=r'$T_cchan$')
+lins[2] = ax.plot(xVals[1:] * 100, Tawvals[::-1], 'p--', lw=2, label=r'$T_gadbiatic$')
+lins[3] = ax.plot(xVals[1:] * 100, Tgvals[::-1], 'm--', lw=2, label=r'$T_ggas$')
 ax.set_ylim([0, np.round(max(Twvals) + 100, 2)])
 
 # Heat flux
 ax2 = ax.twinx()
-lins[1] = ax2.plot(xVals[1:] * 100, np.array(qvals[::-1]) / 1e7, 'r-.', lw=2, label=r'$q$')
+lins[4] = ax2.plot(xVals[1:] * 100, np.array(qvals[::-1]) / 1e7, 'r-.', lw=2, label=r'$q$')
 
 # Geometry
 heights = interpol(xHeight, Height, xVals)
-lins[2] = ax2.plot(xVals * 100, heights * 1e3, 'b:', lw=2, label=r'$d_c$')
-lins[3] = ax2.plot(xVals * 100, yVals * 10, 'k-', label=r'Contour')
+lins[5] = ax2.plot(xVals * 100, heights * 1e3, 'b:', lw=2, label=r'$d_c$')
+lins[6] = ax2.plot(xVals * 100, yVals * 10, 'k-', label=r'Contour')
 
 # Create legend
 labs = [line[0].get_label() for line in lins]
@@ -395,7 +418,7 @@ ax.legend(lines, labs, loc=6, labelspacing=0)
 ax.set_xlabel(r"$x$ coordinate [cm]")
 ax.set_ylabel(r"Temperature [K]")
 ax2.set_ylabel(r"$d_c$ [mm]; $q$ [$\mathrm{10^7 W/m^2}$]; Radius [10 cm]")
-ax.set_ylim([400, 2100])
+ax.set_ylim([400, 3400])
 ax2.set_ylim([0, 4])
 ax.grid()
 plt.show()
