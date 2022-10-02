@@ -35,6 +35,7 @@ NChannels = 30  # Number of channels
 tRib = 1.2e-3  # Thickness of Rib
 channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm  # THIS SETTING IS NOT USED IN THIS CODE. IT IS OVERWRITTEN
 roughness = 6e-6  # Not sure what this is, but assume it is right.
+#joe
 
 # Initialize coolant pressure and temperature
 p = pin = 50e5  # Pressure in Pascals
@@ -183,7 +184,8 @@ for i in range(1, len(xVals)):
     dynTemp1 = 0.5 * V ** 2 / cp
 
     # COOLANT: Calculate density and flow velocity
-    rho = rp1.getDensity(p, T)
+    rho = rp1.getDensity(p, T) 
+    # rho = rho / 1.17
     V = fFlow / (A * rho)
 
     # COOLANT: Calculate/update static pressure and temperature
@@ -203,7 +205,6 @@ for i in range(1, len(xVals)):
     # COOLANT:  Calculate bulk flow properties of coolant
     Re = V * rho * Dh / mu
     Pr = mu * cp / kap
-
 
     # COOLANT RELATED: Correct for curvature of channel alongside nozzle
     if i > 1 and i < len(xVals):
@@ -257,18 +258,20 @@ for i in range(1, len(xVals)):
         # hgg = th.bartz2(T0, Tw, p0, Mg, rt * 2, aRatio, mug, cpg, Prg, gg, cstar, Rnozzle)
         # print("Compare hg: ", hg , " with hgg: ", hgg)
         # hg = hg / 0.026 * 0.0195
-        hg = hg * 1
+        # hg = hg / 0.026 * 0.0195
         
 
         # COOLANT
         # Calculate Nusselt number
         # Nu = th.Taylor(Re, Pr, T, TwChannel, Dh, x)
-        # Nu = th.dittusBoelter(Re,Pr)
+        Nu = th.dittusBoelter(Re,Pr)
         f = th.frictionFactor(Dh, roughness, Re)
+        Nug = th.gnielinski(Re, Pr, Dh, f)
+        print("Nu = ", Nu, ", Nug = ", Nug)
+
         # print("FrictionnFactor = ", f)
 
-        Nu = th.gnielinski(Re, Pr, Dh, f)
-        Nu = Nu * 1   #joe
+        Nu = Nu * 1
 
         # rhow = methane.eqState(p,TwChannel)
         # Nu = th.Ruan(Re,Pr,rho,rhow,Dh,x)
@@ -276,6 +279,7 @@ for i in range(1, len(xVals)):
         # Nu = Nu * Ci * Cksi
         # Calculate coolant convective coefficient
         hc = Nu * kap / Dh
+
 
         # Incorporate heat transfer fin effectiveness into hc (Heat Transfer coefficient for hot gases)
         m = np.sqrt(2 * hc * tRib / kChamber)
@@ -291,7 +295,7 @@ for i in range(1, len(xVals)):
         qW = 5.74 * (pWater / 1e5 * Rnozzle) ** 0.3 * (Taw / 100) ** 3.5  # Water
         qC = 4 * (pCarbDiox / 1e5 * Rnozzle) ** 0.3 * (Taw / 100) ** 3.5  # Carbon Dioxide
         qRad = qW + qC
-        qRad = 0
+        # qRad = 0
 
         # Calculate heat flux
         q = (Taw - T + qRad / hg) / (1 / hg + tChamber / kChamber + 1 / hc)
