@@ -18,6 +18,9 @@ mflow = 0.89229  # kg/s
 OFratio = 2.00
 fFlow = 1 / (1 + OFratio) * mflow
 
+
+rhoratio = 1.0
+
 # Define nozzle material and thickness
 tChamber = 3.0e-3  # wall thickness
 kChamber = 295  # W/(m2 K)
@@ -35,7 +38,6 @@ NChannels = 30  # Number of channels
 tRib = 1.2e-3  # Thickness of Rib
 channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm  # THIS SETTING IS NOT USED IN THIS CODE. IT IS OVERWRITTEN
 roughness = 6e-6  # Not sure what this is, but assume it is right.
-#joe
 
 # Initialize coolant pressure and temperature
 p = pin = 50e5  # Pressure in Pascals
@@ -154,6 +156,7 @@ Q = 0
 Atot = 0
 V = 0
 rho = rp1.getDensity(p, T)
+rho = rho / rhoratio
 cp = rp1.getCp()
 Tw = 400
 mTot = 0
@@ -185,7 +188,7 @@ for i in range(1, len(xVals)):
 
     # COOLANT: Calculate density and flow velocity
     rho = rp1.getDensity(p, T) 
-    # rho = rho / 1.17
+    rho = rho / rhoratio
     V = fFlow / (A * rho)
 
     # COOLANT: Calculate/update static pressure and temperature
@@ -257,7 +260,6 @@ for i in range(1, len(xVals)):
         hg = th.bartz(T0, Tw, p0, Mg, rt * 2, aRatio, mug, cpg, Prg, gg, cstar)
         # hgg = th.bartz2(T0, Tw, p0, Mg, rt * 2, aRatio, mug, cpg, Prg, gg, cstar, Rnozzle)
         # print("Compare hg: ", hg , " with hgg: ", hgg)
-        # hg = hg / 0.026 * 0.0195
         # hg = hg / 0.026 * 0.0195
         
 
@@ -337,15 +339,13 @@ for i in range(1, len(xVals)):
     deltap = f * l / Dh * rho * V ** 2 / 2.0  # Change in pressure of coolant
 
 
-
-
     Q = Q + q * A_heat  # Change in enthalpy of coolant
     Atot = Atot + A_heat  # NOT SURE WHAT THIS IS...
     mCur = (2 * np.pi * Rnozzle * l * tChamber + l * tRib * channelHeight * NChannels) * rhoChamber  # ?? change in ??
     mTot = mTot + mCur  # ??
+
     # Update pressure, temperature and channel length
     p = p - deltap  # Update pressure of coolant
-    fric = th.frictionFactor(Dh, roughness, Re)
     T = T + deltaT  # Update temperature of coolant
     x = x + l  # new X position.
 
