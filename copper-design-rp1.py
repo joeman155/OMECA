@@ -14,12 +14,18 @@ import scipy.interpolate as intp
 import matplotlib.pyplot as plt
 
 # Calculate fuel flow from engine parameters
-mflow = 0.89229  # kg/s
+mflow   = 0.89229  # kg/s
 OFratio = 2.00
-fFlow = 1 / (1 + OFratio) * mflow
+fFlow   = 1 / (1 + OFratio) * mflow
 
 
-rhoratio = 1.0
+rhoratio = 1.00
+kratio   = 1
+
+# Determined that is we multiple these thermal conductivities by 0.7 , each, we get close to what RPA predicts.
+hgratio  = 1
+hcratio  = 1
+
 
 # Define nozzle material and thickness
 tChamber = 3.0e-3  # wall thickness
@@ -34,8 +40,11 @@ s_yield = 120932000  # Yield strength
 # I am sure this geometry changes.
 
 
-NChannels = 30  # Number of channels
-tRib = 1.2e-3  # Thickness of Rib
+# We probably want to set the tRib ...from a manufacturing point of view.
+# tRib = Rnozzle * 2 * np.pi / NChannels - channelWidth = 
+# NChannels = (Rnozzle + tChamber) * 2 * np.pi / (tRib + channelWidth) = (10 + 3) * 2 * 3.1415 / (1.5 + 1.5) = 27.2263 - Close enough to 27.
+NChannels = 26  # Number of channels
+tRib      = 1.5e-3  # Thickness of Rib
 channelHeight = 3e-3  # In RPA, the channel height varies between 2.5 and 3mm  # THIS SETTING IS NOT USED IN THIS CODE. IT IS OVERWRITTEN
 roughness = 6e-6  # Not sure what this is, but assume it is right.
 
@@ -78,8 +87,9 @@ xHeight = np.array([0, 9, 11, 13, 15, 16, 18, 20, 30]) * 1e-2
 # Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.8]) * 1e-3
 # Height = np.array([2.5, 2.0, 2.2, 2.3, 2.3, 2.0, 1.8, 1.6, 1.2]) * 1e-3
 
-# Fairly level
+# Level = height .... the same
 Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]) * 1e-3
+Height = np.array([1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]) * 1e-3
 
 # big peak
 # Height = np.array([2.5, 2.5, 2.5, 2.5, 3.5, 2.5, 2.5, 2.5, 2.5]) * 1e-3
@@ -175,7 +185,7 @@ for i in range(1, len(xVals)):
         A = np.pi * ((Rnozzle + channelHeight) ** 2 - Rnozzle ** 2)
         Dh = th.Dh_shell(Rnozzle + channelHeight, Rnozzle)
     else:
-        channelWidth = Rnozzle * 2 * np.pi / NChannels - tRib
+        channelWidth = (tChamber + Rnozzle) * 2 * np.pi / NChannels - tRib
         if channelWidth < 0:
             print("Error: channel width smaller than 0")
         A = NChannels * channelWidth * channelHeight
@@ -203,7 +213,7 @@ for i in range(1, len(xVals)):
 
     mu = rp1.getViscoity(p, T) * rho / 1000000
     cp = rp1.getCp()
-    kap = rp1.getConductivity(p, T)
+    kap = kratio * rp1.getConductivity(p, T)
 
     # COOLANT:  Calculate bulk flow properties of coolant
     Re = V * rho * Dh / mu
@@ -261,6 +271,7 @@ for i in range(1, len(xVals)):
         # hgg = th.bartz2(T0, Tw, p0, Mg, rt * 2, aRatio, mug, cpg, Prg, gg, cstar, Rnozzle)
         # print("Compare hg: ", hg , " with hgg: ", hgg)
         # hg = hg / 0.026 * 0.0195
+        hg = hg * hgratio
         
 
         # COOLANT
@@ -269,6 +280,7 @@ for i in range(1, len(xVals)):
         Nu = th.dittusBoelter(Re,Pr)
         f = th.frictionFactor(Dh, roughness, Re)
         Nug = th.gnielinski(Re, Pr, Dh, f)
+        # Nu = Nug
         print("Nu = ", Nu, ", Nug = ", Nug)
 
         # print("FrictionnFactor = ", f)
@@ -281,6 +293,7 @@ for i in range(1, len(xVals)):
         # Nu = Nu * Ci * Cksi
         # Calculate coolant convective coefficient
         hc = Nu * kap / Dh
+        hc = hc * hcratio
 
 
         # Incorporate heat transfer fin effectiveness into hc (Heat Transfer coefficient for hot gases)
