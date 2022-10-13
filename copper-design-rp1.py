@@ -239,12 +239,11 @@ for i in range(1, len(xVals)):
                 1 + 1.5 * Pr ** (-1. / 6.) * Re ** (-1. / 8.) * (Pr * ksi - 1))
 
     # Check if CEA station should be shifted, depending on current area ratio
-    if aRatio >= AreaCEA[CEAval_curr] and aRatio >= AreaCEA[CEAval_curr - 1] and CEAval_curr > 1:
-        CEAval_curr = CEAval_curr - 1
-    elif aRatio <= AreaCEA[CEAval_curr] and aRatio <= AreaCEA[CEAval_curr - 1] and CEAval_curr > 1:
-        CEAval_curr = CEAval_curr - 1
-    elif abs(aRatio - aRatioMinm) < 1e-6:
-        CEAval_curr = CEAval_curr - 1
+    while (not ((aRatio >= AreaCEA[CEAval_curr - 1] and aRatio <= AreaCEA[CEAval_curr]) or (aRatio <= AreaCEA[CEAval_curr - 1] and aRatio >= AreaCEA[CEAval_curr]))):
+       CEAval_curr = CEAval_curr - 1
+
+
+
 
     # HOT GASES: Calculate hot gas parameters depending on CEA values
     pWater = CEA.interpol(aRatio, AreaCEA, CEAval_curr, pH2O)
@@ -259,6 +258,11 @@ for i in range(1, len(xVals)):
     Pg   = CEA.interpol(aRatio, AreaCEA, CEAval_curr, pCEA)
     Vg   = CEA.interpol(aRatio, AreaCEA, CEAval_curr, velCEA) 
     Taw = th.adiabatic_wall(Tg, gg, Mg, Prg)
+
+
+    print("mg = ", Mg, " and aratio = ", aRatio, " and AreaCEA = ", AreaCEA)
+    print("CEAVal_curr = ", CEAval_curr)
+    print("MCEA = ", MCEA)
 
 
     # HOT GASES: Increase TwNew to avoid missing loop
