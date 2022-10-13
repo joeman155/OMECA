@@ -82,6 +82,7 @@ def read(fName):
 
     
     mach = np.array([])
+    son_vel = np.array([])
     switch_frozen = 0
     for line in content:
         if line[0:69] == "           THEORETICAL ROCKET PERFORMANCE ASSUMING FROZEN COMPOSITION" and switch_frozen == 0:
@@ -89,6 +90,9 @@ def read(fName):
         if line[0:5] == " MACH":
             for val in line[17:].split():
                 mach = np.append(mach,float(val))            
+        if line[0:8] == " SON VEL":
+            for val in line[17:].split():
+                son_vel = np.append(son_vel,float(val))            
 
 
     cp = np.array([])
@@ -154,7 +158,7 @@ def read(fName):
     pH2O = nH2O*pressure
     pCO2 = nCO2*pressure
 
-    return area,pressure,temper,rho,mach,visc,cp,prandtl,gamma,pH2O,pCO2,cstar
+    return area,pressure,temper,rho,mach,visc,cp,prandtl,gamma,pH2O,pCO2,cstar,son_vel
     
 def interpol(aRatio,area_CEA,CEAval_curr,param_CEA):
     dist = abs(aRatio-area_CEA[CEAval_curr])/abs(area_CEA[CEAval_curr]-area_CEA[CEAval_curr-1])

@@ -13,6 +13,7 @@ from scipy import interpolate
 
 
 
+# NOT USED
 def bartz2(T0, Tw, p0, M, Dt, areaRatio, visc, cp, Pr, gamma, cstar, r):
     g = 9.81
     s = (0.5 * Tw / T0 * (1 + (gamma - 1) / 2 * M ** 2) + 0.5) ** (-0.68) * (1 + (gamma - 1) / 2 * M ** 2) ** (-0.12)
@@ -21,6 +22,12 @@ def bartz2(T0, Tw, p0, M, Dt, areaRatio, visc, cp, Pr, gamma, cstar, r):
     return h
 
 
+# 
+# Possible issue
+# Look at https://mediatum.ub.tum.de/doc/1221918/1221918.pdf
+#
+# Page 25, equation 2.33. sigma uses Tw/Taw  . Below, the formula uses T0, which is Tinfinity
+#
 def bartz(T0, Tw, p0, M, Dt, areaRatio, visc, cp, Pr, gamma, cstar):
     s = (0.5 * Tw / T0 * (1 + (gamma - 1) / 2 * M ** 2) + 0.5) ** (-0.68) * (1 + (gamma - 1) / 2 * M ** 2) ** (-0.12)
     h = 0.026 / Dt ** 0.2 * visc ** 0.2 * cp / Pr ** 0.6 * (p0 / cstar) ** 0.8 * (1.0 / areaRatio) ** 0.9 * s
@@ -31,6 +38,56 @@ def bartzFilm(T0, Tw, p0, M, Dt, area, muFilm, cpFilm, PrFilm, gamma, cstar):
     s = (0.5 * Tw / T0 * (1 + (gamma - 1) / 2 * M ** 2) + 0.5) ** (-0.68)
     h = 0.026 / Dt ** 0.2 * muFilm ** 0.2 * cpFilm / PrFilm ** 0.6 * (p0 / cstar) ** 0.8 * (1.0 / area) ** 0.9 * s
     return h
+
+
+
+# DIFFICULTIES
+# Expanding knowledge of RP-1 - so we know more about its properties over a greater range of pressures and temps
+# Knowing how to calculate htaw, hw
+# Knowing how we correctly simulate a collection of orifices, each contributing a small flow of mass.
+#
+
+
+# T0 - 
+# Tw - Temperature at wall
+# Dt - Diameter at throat
+# mc - Mass Flow Rate of coolant
+# areaRatio - Ratio of area (at current station) to Area at throat
+# htaw - Co-efficient of heat transfer .... 
+# hw   - Co-efficient of heat transfer ....
+# Prc  - Prandtl number of coolant
+# muc  - Viscosity of Coolant
+def bartzG(T0, Tw, Dt, mc, areaRatio, htaw, hw, Prc, muc):
+    Ath = np.pi* Dt * Dt / 4
+    ag = 0.026 * muc / (Prc * Dt ** 0.2 ) * (mc / Ath) ** 0.8 * (1.0 / areaRatio) * ((htaw - hw) / (T0 - Tw))
+    return ag
+
+
+# cpl = specific heat of Film Liquid
+# Prl = Prandtl number of Film Liquid
+# mul = Viscosity of the Film Liquid
+# x   = Distance from the hole in meters
+# ns = stability factor - A function of the Reynold's number.
+# ml = Mass flow rate of the film coolant kg/second
+# vg = velocity of the hot gas
+# Prg = Prandtl number of the hot gas
+# rhol = Density of the liquid film
+# rc = radius of the liquid film coolant hole "I think"
+# cpg = Specific heat of the Gas
+def bartzL(cpl, Prl, mul, x, ns, ml, vg, Prg, rhol, rc, cpg):
+    al = 0.0288 * cpl / (Prl ** 0.667 * (mul * x ) ** 0.2) * (ns * ml * vg * ag * Prg ** 0.667 * rhol / (np.pi * rc * cpg)) ** 0.4
+    return al
+
+
+def coolingEffiency(St, x, F, s, Recool, Prcool, v, vcool):
+    s = -((St * x) /(F * s) - 0.04) * (Recool * Prcool * v / vcool) ** 0.125
+    return np.exp(1) ** s
+
+
+def adbiaticCoolingEff(k, x, vc, v, Re):
+    vr = vc / v
+    e = k * (x / vr) ** -0.8 * Re ** 0.2
+    return e
 
 
 def adiabatic_wall(T_free, gamma, M, Pr):

@@ -125,7 +125,7 @@ else:
 
 # Read CEA file to find adiabatic wall temperature and convective coefficient
 CEAfile = "dataCea/rp-1lox.out"
-AreaCEA, pCEA, TCEA, rhoCEA, MCEA, muCEA, cpCEA, PrCEA, gCEA, pH2O, pCO2, cstar = CEA.read(CEAfile)
+AreaCEA, pCEA, TCEA, rhoCEA, MCEA, muCEA, cpCEA, PrCEA, gCEA, pH2O, pCO2, cstar, velCEA = CEA.read(CEAfile)
 T0 = TCEA[0]
 p0 = pCEA[0]
 # Create class with methane thermophysical model
@@ -255,6 +255,9 @@ for i in range(1, len(xVals)):
     Prg = CEA.interpol(aRatio, AreaCEA, CEAval_curr, PrCEA)
     cpg = CEA.interpol(aRatio, AreaCEA, CEAval_curr, cpCEA)
     mug = CEA.interpol(aRatio, AreaCEA, CEAval_curr, muCEA)
+    rhog = CEA.interpol(aRatio, AreaCEA, CEAval_curr, rhoCEA)
+    Pg   = CEA.interpol(aRatio, AreaCEA, CEAval_curr, pCEA)
+    Vg   = CEA.interpol(aRatio, AreaCEA, CEAval_curr, velCEA) 
     Taw = th.adiabatic_wall(Tg, gg, Mg, Prg)
 
 
@@ -267,6 +270,7 @@ for i in range(1, len(xVals)):
         TwChannel = TwChannelNew
         # HOT GASES
         # Calculate convective coefficient using Bartz
+        print("T0 = ", T0)
         hg = th.bartz(T0, Tw, p0, Mg, rt * 2, aRatio, mug, cpg, Prg, gg, cstar)
         # hgg = th.bartz2(T0, Tw, p0, Mg, rt * 2, aRatio, mug, cpg, Prg, gg, cstar, Rnozzle)
         # print("Compare hg: ", hg , " with hgg: ", hgg)
@@ -294,6 +298,33 @@ for i in range(1, len(xVals)):
         # Calculate coolant convective coefficient
         hc = Nu * kap / Dh
         hc = hc * hcratio
+
+
+
+        # EXPERIMENTAL CODE
+        # s = 0.001         # Gap size of 1 mm
+        # Vcool = 123       # Velocity of liquid film
+        # Pcool = Pg
+        # rhoc = rp1.getDensity(Pcool, Tcool) 
+        # Recool = Vcool * rhocool * distance / mucool
+        # Prcool = mucool * cpcool / kapcool
+        # St = Nu / Re / Pr
+
+        # Location of orifice
+        # xloc = 0.02
+        # x = xVals[-i - 1] - xloc   # How far away we are from the orifice
+
+        # rho = density of coolant in channel, not in the film... but we can fix this up later
+        # 
+        # F = rho * vcool / (rhog * v)
+
+        # eff = th.coolingEffiency(St, x, F, s, Recool, Prcool, v, vcool)
+        # eff = th.adbiaticCoolingEff(3.09, x, vc, v, Recool)
+        # print("eff = ", eff)
+
+
+
+
 
 
         # Incorporate heat transfer fin effectiveness into hc (Heat Transfer coefficient for hot gases)
@@ -340,6 +371,9 @@ for i in range(1, len(xVals)):
     print("Coolant Pressure, Temperature = ", np.round(p, 2), np.round(T, 1))
     print("Heat Coefficients: hg = ", np.round(hg, 2), " - hc = ", np.round(hc, 2), ", Nu = ", np.round(Nu, 2), ", RE = ", np.round(Re,3), ", Pr = ", np.round(Pr, 3), ", kap = ", np.round(kap, 2), ", Dh = ", np.round(1000 * Dh, 2), ", FinEffectiveness = ", finEffectiveness, ", hcboost = ", hcboost)
     print("Temperatures:  Adbiatic Gas Temp: ", Taw, " Wall(gas) Temperature: ", Tw, ", Channel Wall Temp: ", TwChannel)
+    print("Pressure of hot gases: ", Pg)
+    Vgspeed = Vg * Mg
+    print("Velocity of hot gases: ", Vgspeed, " ms-1, MACH: ", Mg)
     print("Heat Flux: ", q)
 
     # Calculate change in temperature and pressure
