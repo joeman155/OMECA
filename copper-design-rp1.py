@@ -99,7 +99,6 @@ Height = np.array([1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]) * 1e-3
 # Height = np.array([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.2, 1.5]) * 1e-3
 # Height = np.array([3.5, 3.5, 4.0, 4.3, 5.0, 6.0, 5, 4.5, 4.5]) * 1e-3
 # Height   = np.array([1,   1,   1.3, 2.0, 2.6, 3.0, 3, 2.0, 1.5]) * 1e-3
-#joe
 
 # Check for inward buckling (due to coolant pressure)
 l = max(xVals)
@@ -260,10 +259,6 @@ for i in range(1, len(xVals)):
     Taw = th.adiabatic_wall(Tg, gg, Mg, Prg)
 
 
-    print("mg = ", Mg, " and aratio = ", aRatio, " and AreaCEA = ", AreaCEA)
-    print("CEAVal_curr = ", CEAval_curr)
-    print("MCEA = ", MCEA)
-
 
     # HOT GASES: Increase TwNew to avoid missing loop
     TwNew = Tw + 10
@@ -274,7 +269,6 @@ for i in range(1, len(xVals)):
         TwChannel = TwChannelNew
         # HOT GASES
         # Calculate convective coefficient using Bartz
-        print("T0 = ", T0)
         hg = th.bartz(T0, Tw, p0, Mg, rt * 2, aRatio, mug, cpg, Prg, gg, cstar)
         # hgg = th.bartz2(T0, Tw, p0, Mg, rt * 2, aRatio, mug, cpg, Prg, gg, cstar, Rnozzle)
         # print("Compare hg: ", hg , " with hgg: ", hgg)
@@ -287,13 +281,8 @@ for i in range(1, len(xVals)):
         # Nu = th.Taylor(Re, Pr, T, TwChannel, Dh, x)
         Nu = th.dittusBoelter(Re,Pr)
         f = th.frictionFactor(Dh, roughness, Re)
-        Nug = th.gnielinski(Re, Pr, Dh, f)
-        # Nu = Nug
-        print("Nu = ", Nu, ", Nug = ", Nug)
+        # Nug = th.gnielinski(Re, Pr, Dh, f)
 
-        # print("FrictionnFactor = ", f)
-
-        Nu = Nu * 1
 
         # rhow = methane.eqState(p,TwChannel)
         # Nu = th.Ruan(Re,Pr,rho,rhow,Dh,x)
@@ -305,10 +294,11 @@ for i in range(1, len(xVals)):
 
 
 
+        # joe
         # EXPERIMENTAL CODE
-        # s = 0.001         # Gap size of 1 mm
-        # Vcool = 123       # Velocity of liquid film
-        # Pcool = Pg
+        s = 0.001           # Gap size of 1 mm
+        Vcool = Vg          # Velocity of liquid film = velocity of hot gas
+        Pcool = Pg          # Pressure is the same as hot gases
         # rhoc = rp1.getDensity(Pcool, Tcool) 
         # Recool = Vcool * rhocool * distance / mucool
         # Prcool = mucool * cpcool / kapcool
