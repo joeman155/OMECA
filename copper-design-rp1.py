@@ -212,7 +212,7 @@ for i in range(1, len(xVals)):
 
     mu = rp1.getViscoity(p, T) * rho / 1000000
     cp = rp1.getCp()
-    kap = kratio * rp1.getConductivity(p, T)
+    kap = kratio * rp1.getConductivity(p[0], T[0])
 
     # COOLANT:  Calculate bulk flow properties of coolant
     Re = V * rho * Dh / mu
@@ -257,6 +257,106 @@ for i in range(1, len(xVals)):
     Pg   = CEA.interpol(aRatio, AreaCEA, CEAval_curr, pCEA)
     Vg   = CEA.interpol(aRatio, AreaCEA, CEAval_curr, velCEA) 
     Taw = th.adiabatic_wall(Tg, gg, Mg, Prg)
+    Vgspeed = Vg * Mg
+
+
+
+    # joe
+    # EXPERIMENTAL CODE
+    # We limit this to pressures above 6000,000 because we don't have sufficient conductivity data
+    # The result of this is we can't model film cooling in the exit part of the nozzle for pressures less than say 700,000 Pa 
+    # While inconvenient, the majority of the heat flux and stresses are around the throat where the pressures are considerably higher
+    # So for now, we over look this issue.
+    #
+    if Pg > 600000:
+        # We model a slot of size 1mm.
+        s = 0.001                  # Gap size of 1 mm
+        coolfraction = 0.01        # Fraction of total mass flow that is coolant
+        # We have this slot at INJECTOR... i.e. i = 0 xvals[i] = xvals[0] = 0mm
+        #
+        rStation = yVals[0]
+        areaSlot =  np.pi * (rStation + s) ** 2 - np.pi * rStation ** 2 
+
+
+        # print("xvals[0] = ", xVals[0])
+        # print("yvals[1] = ", yVals[0])
+        # print("areaSlot = ", areaSlot)
+
+        mfratecool = coolfraction * mflow
+
+        # Vcool = float(Vgspeed)          # Velocity of liquid film = velocity of hot gas (can't see it being more)
+        Pcool = Pg                 # Pressure is the same as hot gases
+        Tcool = T[0]               # Definitely not right, but might be a good enough approximation for around the area of injection of film coolant
+                                      # We are assuming that the coolant injected is the coolant inside the regenerative cooling channels.
+        rhocool = rp1.getDensity(Pcool, Tcool) 
+        Vcool = mfratecool / (areaSlot * rhocool)
+           
+
+        # Get properties of this coolant as it enters the chamber
+        mucool = rp1.getViscoity(Pcool, Tcool) * rhocool / 1000000
+        kapcool = kratio * rp1.getConductivity(Pcool, Tcool)
+        cpcool = rp1.getCp()
+
+        # print("FILM COOLANT VELO: ", Vcool)
+        # print("FILM COOLANT TEMP: ", Tcool)
+        # print("FILM COOLANT PRES: ", Pcool)
+        # print("FILM COOLANT DENS: ", rhocool)
+
+
+        Recool = Vcool * rhocool * s / mucool
+        Prcool = mucool * cpcool / kapcool
+      
+        print("FILM COOLANT RE: ", Recool, " which is Vcool x rhocool * s / mucool = ", Vcool, ", ", rhocool, ", ",  s, mucool)
+        # print("FILM COOLANT PR: ", Prcool)
+
+        # St = Nu / Re / Pr
+
+
+        if len(xVals) - i  >= 55:
+            # Location of orifice
+            xloc = xVals[54]
+            x = xVals[-i - 1] - xloc   # How far away we are from the orifice
+        # elif len(xVals) - i  >= 50:
+        #     # Location of orifice
+        #     xloc = xVals[49]
+        #     x = xVals[-i - 1] - xloc   # How far away we are from the orifice
+        # elif len(xVals) - i  >= 40:
+        #     # Location of orifice
+        #     xloc = xVals[39]
+        #     x = xVals[-i - 1] - xloc   # How far away we are from the orifice
+        # elif len(xVals) - i  >= 30:
+        #     # Location of orifice
+        #     xloc = xVals[29]
+        #     x = xVals[-i - 1] - xloc   # How far away we are from the orifice
+        # elif len(xVals) - i  >= 20:
+        #     xloc = xVals[19]
+        #     x = xVals[-i - 1] - xloc   # How far away we are from the orifice
+        # elif len(xVals) - i  >= 10:
+        #     xloc = xVals[9]
+        #     x = xVals[-i - 1] - xloc   # How far away we are from the orifice
+        else:
+            xloc = xVals[0]
+            x = xVals[-i - 1] - xloc
+            print("THERE")
+
+
+
+        print("i = ", i, ", XXX = ", x)
+
+        # rho = density of coolant in channel, not in the film... but we can fix this up later
+        # 
+        # F = rho * vcool / (rhog * v)
+        # Get Reynolds number for hot gases
+        Rehot = rhog * Vgspeed * x / mug
+
+        # eff = th.adbiaticCoolingEff(3.09, x, Vcool, Vgspeed, Recool)
+        # eff = th.coolingEffiency(St, x, F, s, Recool, Prcool, v, Vcool)
+        # print("FILM COOLANT Vs: ", Vcool, Vgspeed)
+        eff = th.adbiaticCoolingEff2(Rehot, Recool)
+        print("Rehot, Recool, eff = ", Rehot, Recool, eff)
+
+        # joe
+        Taw = eff * (Tcool - Tg) + Tg
 
 
 
@@ -293,28 +393,7 @@ for i in range(1, len(xVals)):
         hc = hc * hcratio
 
 
-
-        # joe
-        # EXPERIMENTAL CODE
-        s = 0.001           # Gap size of 1 mm
-        Vcool = Vg          # Velocity of liquid film = velocity of hot gas
-        Pcool = Pg          # Pressure is the same as hot gases
-        # rhoc = rp1.getDensity(Pcool, Tcool) 
-        # Recool = Vcool * rhocool * distance / mucool
-        # Prcool = mucool * cpcool / kapcool
-        # St = Nu / Re / Pr
-
-        # Location of orifice
-        # xloc = 0.02
-        # x = xVals[-i - 1] - xloc   # How far away we are from the orifice
-
-        # rho = density of coolant in channel, not in the film... but we can fix this up later
-        # 
-        # F = rho * vcool / (rhog * v)
-
-        # eff = th.coolingEffiency(St, x, F, s, Recool, Prcool, v, vcool)
-        # eff = th.adbiaticCoolingEff(3.09, x, vc, v, Recool)
-        # print("eff = ", eff)
+ 
 
 
 
@@ -366,7 +445,6 @@ for i in range(1, len(xVals)):
     print("Heat Coefficients: hg = ", np.round(hg, 2), " - hc = ", np.round(hc, 2), ", Nu = ", np.round(Nu, 2), ", RE = ", np.round(Re,3), ", Pr = ", np.round(Pr, 3), ", kap = ", np.round(kap, 2), ", Dh = ", np.round(1000 * Dh, 2), ", FinEffectiveness = ", finEffectiveness, ", hcboost = ", hcboost)
     print("Temperatures:  Adbiatic Gas Temp: ", Taw, " Wall(gas) Temperature: ", Tw, ", Channel Wall Temp: ", TwChannel)
     print("Pressure of hot gases: ", Pg)
-    Vgspeed = Vg * Mg
     print("Velocity of hot gases: ", Vgspeed, " ms-1, MACH: ", Mg)
     print("Heat Flux: ", q)
 

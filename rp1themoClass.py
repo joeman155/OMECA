@@ -86,7 +86,14 @@ def coolingEffiency(St, x, F, s, Recool, Prcool, v, vcool):
 
 def adbiaticCoolingEff(k, x, vc, v, Re):
     vr = vc / v
+    if x == 0:
+       x = 0.001
     e = k * (x / vr) ** -0.8 * Re ** 0.2
+    return e
+
+
+def adbiaticCoolingEff2(Rex, Recool):
+    e = Recool / (Recool + 0.244 * (Rex ** 0.8))
     return e
 
 
@@ -414,9 +421,10 @@ class rp1thermo:
             upper_kval = f(pressure)
 
             # Interpolate between the two temperatures, to give us the final result
-            # f = interpolate.interp1d([lower_temp, upper_temp], [lower_kval, upper_kval])
-            f = interpolate.interp1d([lower_temp, upper_temp], [lower_kval[0], upper_kval[0]])
-            kval = f(temperature)[0]
+            # f = interpolate.interp1d([lower_temp, upper_temp], [lower_kval[0], upper_kval[0]])
+            f = interpolate.interp1d([lower_temp, upper_temp], [lower_kval, upper_kval])
+            kval = f(temperature)
+            # kval = f(temperature)[0]
 
             return kval
 
